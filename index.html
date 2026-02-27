@@ -11,6 +11,7 @@
         <header>
             <h1>Career & Experience Visualizer</h1>
             <div class="header-actions">
+                <button id="concise-view-btn" class="btn btn-primary">Concise View</button>
                 <button id="export-btn" class="btn btn-secondary">Export Data</button>
                 <button id="import-btn" class="btn btn-secondary">Import Data</button>
                 <input type="file" id="import-file" accept=".json" style="display: none;">
@@ -140,6 +141,43 @@
                     <button type="submit" class="btn btn-primary">Save Tag</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Concise View Modal -->
+    <div id="concise-view-modal" class="modal">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h3>Concise View - Select Tags</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="tag-selection-section">
+                    <h4>Select Tags to Include in Report:</h4>
+                    <div class="tag-category-filters">
+                        <button class="category-filter active" data-category="all">All Categories</button>
+                        <button class="category-filter" data-category="test target tech">Test Target Tech</button>
+                        <button class="category-filter" data-category="test tech">Test Tech</button>
+                        <button class="category-filter" data-category="skill">Skills</button>
+                    </div>
+                    <div id="tag-selection-grid" class="tag-selection-grid">
+                        <!-- Tag checkboxes will be populated here -->
+                    </div>
+                    <div class="selection-actions">
+                        <button id="select-all-tags" class="btn btn-secondary">Select All</button>
+                        <button id="clear-all-tags" class="btn btn-secondary">Clear All</button>
+                        <button id="generate-report" class="btn btn-primary">Generate Report</button>
+                    </div>
+                </div>
+                <div id="concise-report-results" class="report-results" style="display: none;">
+                    <h4>Assignment Summary Report</h4>
+                    <div id="report-content"></div>
+                    <div class="report-actions">
+                        <button id="export-report" class="btn btn-secondary">Export Report</button>
+                        <button id="back-to-selection" class="btn btn-secondary">Back to Selection</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

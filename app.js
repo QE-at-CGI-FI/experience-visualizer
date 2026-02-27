@@ -25,6 +25,7 @@ class CareerVisualizer {
         document.getElementById('export-btn').addEventListener('click', () => this.exportData());
         document.getElementById('import-btn').addEventListener('click', () => this.openImportDialog());
         document.getElementById('import-file').addEventListener('change', (e) => this.importData(e));
+        document.getElementById('concise-view-btn').addEventListener('click', () => this.openConciseViewModal());
 
         // Employment actions
         document.getElementById('add-employment-btn').addEventListener('click', () => this.openEmploymentModal());
@@ -43,6 +44,9 @@ class CareerVisualizer {
         document.querySelectorAll('.tag-filter').forEach(filter => {
             filter.addEventListener('click', (e) => this.handleTagFilter(e));
         });
+
+        // Concise view event handlers
+        this.bindConciseViewEvents();
 
         // Close modals when clicking outside
         window.addEventListener('click', (e) => {
@@ -500,6 +504,286 @@ class CareerVisualizer {
         
         // Reset the file input
         e.target.value = '';
+    }
+
+    // ===== CONCISE VIEW FUNCTIONALITY =====
+    
+    bindConciseViewEvents() {
+        // Category filters in concise view modal
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('category-filter')) {
+                document.querySelectorAll('.category-filter').forEach(filter => {
+                    filter.classList.remove('active');
+                });
+                e.target.classList.add('active');
+                this.renderTagSelectionGrid();
+            }
+        });
+
+        // Concise view modal actions
+        document.getElementById('select-all-tags').addEventListener('click', () => this.selectAllTags());
+        document.getElementById('clear-all-tags').addEventListener('click', () => this.clearAllTags());
+        document.getElementById('generate-report').addEventListener('click', () => this.generateConciseReport());
+        document.getElementById('export-report').addEventListener('click', () => this.exportConciseReport());
+        document.getElementById('back-to-selection').addEventListener('click', () => this.showTagSelection());
+    }
+
+    openConciseViewModal() {
+        const modal = document.getElementById('concise-view-modal');
+        this.showTagSelection();
+        this.renderTagSelectionGrid();
+        modal.classList.add('active');
+    }
+
+    showTagSelection() {
+        document.querySelector('.tag-selection-section').style.display = 'block';
+        document.getElementById('concise-report-results').style.display = 'none';
+    }
+
+    renderTagSelectionGrid() {
+        const container = document.getElementById('tag-selection-grid');
+        const activeFilter = document.querySelector('.category-filter.active').dataset.category;
+        
+        // Get all unique tags
+        const allTags = dataStore.getTags();
+        const uniqueTags = {};
+        
+        allTags.forEach(tag => {
+            const key = `${tag.name}_${tag.category}`;
+            if (!uniqueTags[key]) {
+                uniqueTags[key] = {
+                    name: tag.name,
+                    category: tag.category,
+                    count: 0,
+                    tagIds: []
+                };
+            }
+            uniqueTags[key].count++;
+            uniqueTags[key].tagIds.push(tag.id);
+        });
+
+        // Filter by selected category
+        const filteredTags = Object.values(uniqueTags).filter(tag => 
+            activeFilter === 'all' || tag.category === activeFilter
+        );
+
+        // Sort alphabetically
+        filteredTags.sort((a, b) => a.name.localeCompare(b.name));
+
+        if (filteredTags.length === 0) {
+            container.innerHTML = '<p class="empty-message">No tags found for the selected category.</p>';
+            return;
+        }
+
+        container.innerHTML = filteredTags.map(tag => {
+            const categoryInfo = TagCategories[tag.category] || {};
+            return `
+                <div class="tag-checkbox-item">
+                    <input type="checkbox" id="tag-${tag.name}_${tag.category}" 
+                           value="${tag.name}_${tag.category}" 
+                           data-name="${this.escapeHtml(tag.name)}" 
+                           data-category="${tag.category}">
+                    <label for="tag-${tag.name}_${tag.category}" 
+                           class="tag-label ${categoryInfo.className || ''}"
+                           style="background-color: ${categoryInfo.backgroundColor || '#e9ecef'};">
+                        ${this.escapeHtml(tag.name)}
+                        <span class="tag-count">(${tag.count})</span>
+                    </label>
+                </div>
+            `;
+        }).join('');
+    }
+
+    selectAllTags() {
+        const checkboxes = document.querySelectorAll('#tag-selection-grid input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = true);
+    }
+
+    clearAllTags() {
+        const checkboxes = document.querySelectorAll('#tag-selection-grid input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = false);
+    }
+
+    generateConciseReport() {
+        const selectedTags = this.getSelectedTags();
+        
+        if (selectedTags.length === 0) {
+            alert('Please select at least one tag to generate a report.');
+            return;
+        }
+
+        // Get assignments that have any of the selected tags
+        const assignmentMap = new Map();
+        const allTags = dataStore.getTags();
+
+        selectedTags.forEach(selectedTag => {
+            allTags.forEach(tag => {
+                if (tag.name === selectedTag.name && tag.category === selectedTag.category) {
+                    const assignment = dataStore.getAssignment(tag.assignmentId);
+                    if (assignment) {
+                        if (!assignmentMap.has(assignment.id)) {
+                            const employment = dataStore.getEmployment(assignment.employmentId);
+                            assignmentMap.set(assignment.id, {
+                                assignment: assignment,
+                                employment: employment,
+                                matchedTags: []
+                            });
+                        }
+                        assignmentMap.get(assignment.id).matchedTags.push(tag);
+                    }
+                }
+            });
+        });
+
+        // Convert to array and sort by start date (newest first)
+        const reportData = Array.from(assignmentMap.values())
+            .sort((a, b) => new Date(b.assignment.startDate) - new Date(a.assignment.startDate));
+
+        this.renderConciseReport(reportData, selectedTags);
+    }
+
+    getSelectedTags() {
+        const checkboxes = document.querySelectorAll('#tag-selection-grid input[type="checkbox"]:checked');
+        return Array.from(checkboxes).map(cb => ({
+            name: cb.dataset.name,
+            category: cb.dataset.category
+        }));
+    }
+
+    renderConciseReport(reportData, selectedTags) {
+        const reportContent = document.getElementById('report-content');
+        
+        // Calculate totals - group by employment to avoid double-counting overlapping assignments
+        let totalMonths = 0;
+        const employmentGroups = new Map();
+        
+        // Group assignments by employment
+        reportData.forEach(item => {
+            if (!employmentGroups.has(item.employment.id)) {
+                employmentGroups.set(item.employment.id, {
+                    employment: item.employment,
+                    assignments: []
+                });
+            }
+            employmentGroups.get(item.employment.id).assignments.push(item);
+        });
+        
+        // For each employment, use the employment duration (not sum of assignments)
+        // to prevent overlapping assignments from being counted multiple times
+        employmentGroups.forEach(group => {
+            const employmentDuration = DateUtils.calculateDuration(group.employment.startDate, group.employment.endDate);
+            const employmentMonths = this.parseDurationToMonths(employmentDuration);
+            totalMonths += employmentMonths;
+        });
+
+        const totalDuration = this.formatDurationFromMonths(totalMonths);
+
+        // Generate report HTML
+        const reportHtml = `
+            <div class="report-summary">
+                <div class="summary-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Selected Tags:</span>
+                        <span class="stat-value">${selectedTags.length}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Matching Assignments:</span>
+                        <span class="stat-value">${reportData.length}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Total Duration:</span>
+                        <span class="stat-value">${totalDuration}</span>
+                    </div>
+                </div>
+                
+                <div class="selected-tags-list">
+                    <h5>Selected Tags:</h5>
+                    <div class="tags-display">
+                        ${selectedTags.map(tag => {
+                            const categoryInfo = TagCategories[tag.category] || {};
+                            return `
+                                <span class="selected-tag ${categoryInfo.className || ''}"
+                                      style="background-color: ${categoryInfo.backgroundColor || '#e9ecef'};">
+                                    ${this.escapeHtml(tag.name)}
+                                </span>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            </div>
+
+            <div class="assignments-list">
+                ${reportData.map(item => {
+                    const duration = DateUtils.calculateDuration(item.assignment.startDate, item.assignment.endDate);
+                    const dateRange = DateUtils.formatDateRange(item.assignment.startDate, item.assignment.endDate);
+                    
+                    return `
+                        <div class="assignment-report-item">
+                            <div class="assignment-header">
+                                <h5>${this.escapeHtml(item.assignment.title)}</h5>
+                                <div class="assignment-meta">
+                                    <span class="company">${this.escapeHtml(item.employment.company)}</span>
+                                    <span class="duration">${duration}</span>
+                                </div>
+                            </div>
+                            <div class="assignment-period">${dateRange}</div>
+                            ${item.assignment.description ? `<div class="assignment-description">${this.escapeHtml(item.assignment.description)}</div>` : ''}
+                            <div class="matched-tags">
+                                <strong>Matched Tags:</strong>
+                                ${item.matchedTags.map(tag => {
+                                    const categoryInfo = TagCategories[tag.category] || {};
+                                    return `
+                                        <span class="matched-tag ${categoryInfo.className || ''}"
+                                              style="background-color: ${categoryInfo.backgroundColor || '#e9ecef'};">
+                                            ${this.escapeHtml(tag.name)}
+                                        </span>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+
+        reportContent.innerHTML = reportHtml;
+        
+        // Show results and hide selection
+        document.querySelector('.tag-selection-section').style.display = 'none';
+        document.getElementById('concise-report-results').style.display = 'block';
+    }
+
+    parseDurationToMonths(durationText) {
+        // Parse duration text back to months for calculations
+        if (durationText.includes('< 1 month')) return 0.5;
+        
+        let totalMonths = 0;
+        const yearMatch = durationText.match(/(\d+)\s+years?/);
+        const monthMatch = durationText.match(/(\d+)\s+months?/);
+        
+        if (yearMatch) totalMonths += parseInt(yearMatch[1]) * 12;
+        if (monthMatch) totalMonths += parseInt(monthMatch[1]);
+        
+        return totalMonths;
+    }
+
+    exportConciseReport() {
+        const reportContent = document.getElementById('report-content');
+        const timestamp = new Date().toISOString().split('T')[0];
+        
+        // Create a simplified version for export
+        const reportText = reportContent.innerText;
+        const blob = new Blob([reportText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `assignment-summary-report-${timestamp}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        URL.revokeObjectURL(url);
     }
 
     // Utility Methods
