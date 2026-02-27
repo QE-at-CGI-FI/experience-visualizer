@@ -377,7 +377,15 @@ class CareerVisualizer {
 
         container.innerHTML = timelineData.map(employment => {
             const duration = DateUtils.calculateDuration(employment.startDate, employment.endDate);
-            const totalTags = employment.assignments.reduce((sum, assignment) => sum + assignment.tags.length, 0);
+            
+            // Count unique tags by creating a Set of tag names+categories combination
+            const uniqueTags = new Set();
+            employment.assignments.forEach(assignment => {
+                assignment.tags.forEach(tag => {
+                    uniqueTags.add(`${tag.name}_${tag.category}`);
+                });
+            });
+            const uniqueTagsCount = uniqueTags.size;
             
             return `
                 <div class="timeline-item">
@@ -388,28 +396,8 @@ class CareerVisualizer {
                     </div>
                     <div class="timeline-summary">
                         ${employment.assignments.length} assignment${employment.assignments.length !== 1 ? 's' : ''}, 
-                        ${totalTags} experience tag${totalTags !== 1 ? 's' : ''}
+                        ${uniqueTagsCount} unique experience tag${uniqueTagsCount !== 1 ? 's' : ''}
                     </div>
-                    ${employment.assignments.length > 0 ? `
-                        <div class="timeline-assignments">
-                            ${employment.assignments.map(assignment => `
-                                <div class="timeline-assignment">
-                                    <strong>${this.escapeHtml(assignment.title)}</strong>
-                                    <span class="timeline-assignment-dates">
-                                        (${DateUtils.formatDateRange(assignment.startDate, assignment.endDate)})
-                                    </span>
-                                    ${assignment.tags.length > 0 ? `
-                                        <div class="timeline-tags">
-                                            ${assignment.tags.map(tag => {
-                                                const categoryInfo = TagCategories[tag.category] || {};
-                                                return `<span class="tag ${categoryInfo.className || ''}">${this.escapeHtml(tag.name)}</span>`;
-                                            }).join('')}
-                                        </div>
-                                    ` : ''}
-                                </div>
-                            `).join('')}
-                        </div>
-                    ` : ''}
                 </div>
             `;
         }).join('');
@@ -444,7 +432,6 @@ class CareerVisualizer {
                      style="background-color: ${categoryInfo.backgroundColor || '#e9ecef'};">
                     ${this.escapeHtml(tag.name)}
                     <div class="tag-stats">
-                        <span class="count">${tag.count} use${tag.count !== 1 ? 's' : ''}</span>
                         <span class="duration">${duration}</span>
                     </div>
                 </div>
