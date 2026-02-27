@@ -433,13 +433,8 @@ class CareerVisualizer {
             return;
         }
 
-        // Sort by count (descending) and then by name
-        filteredTags.sort((a, b) => {
-            if (b.count === a.count) {
-                return a.name.localeCompare(b.name);
-            }
-            return b.count - a.count;
-        });
+        // Sort alphabetically by name
+        filteredTags.sort((a, b) => a.name.localeCompare(b.name));
 
         container.innerHTML = filteredTags.map(tag => {
             const categoryInfo = TagCategories[tag.category] || {};
