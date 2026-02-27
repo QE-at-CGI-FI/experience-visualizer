@@ -228,36 +228,87 @@ class DataStore {
 
     getTagCounts() {
         const counts = {};
+        
+        // First, group tags by employment and tag key to avoid double counting
+        const tagsByEmploymentAndKey = {};
+        
         this.data.tags.forEach(tag => {
+            const assignment = this.getAssignment(tag.assignmentId);
+            if (!assignment) return;
+            
             const key = `${tag.name}_${tag.category}`;
+            const employmentId = assignment.employmentId;
+            
+            if (!tagsByEmploymentAndKey[key]) {
+                tagsByEmploymentAndKey[key] = {};
+            }
+            
+            if (!tagsByEmploymentAndKey[key][employmentId]) {
+                tagsByEmploymentAndKey[key][employmentId] = {
+                    tag: tag,
+                    assignments: []
+                };
+            }
+            
+            tagsByEmploymentAndKey[key][employmentId].assignments.push(assignment);
+        });
+        
+        // Calculate counts and durations based on employments, not individual assignments
+        Object.keys(tagsByEmploymentAndKey).forEach(key => {
+            const [name, category] = key.split('_');
+            
             if (!counts[key]) {
                 counts[key] = {
-                    name: tag.name,
-                    category: tag.category,
+                    name: name,
+                    category: category,
                     count: 0,
                     totalMonths: 0
                 };
             }
-            counts[key].count++;
             
-            // Calculate duration for the assignment this tag belongs to
-            const assignment = this.getAssignment(tag.assignmentId);
-            if (assignment) {
-                const [startYear, startMonth] = assignment.startDate.split('-').map(Number);
-                let endYear, endMonth;
+            Object.keys(tagsByEmploymentAndKey[key]).forEach(employmentId => {
+                const employment = this.getEmployment(parseInt(employmentId));
+                const tagData = tagsByEmploymentAndKey[key][employmentId];
                 
-                if (assignment.endDate) {
-                    [endYear, endMonth] = assignment.endDate.split('-').map(Number);
-                } else {
-                    const now = new Date();
-                    endYear = now.getFullYear();
-                    endMonth = now.getMonth() + 1;
+                if (employment) {
+                    counts[key].count++;
+                    
+                    // Use employment duration, but limit it to the actual assignment periods within that employment
+                    const assignments = tagData.assignments;
+                    let earliestStart = null;
+                    let latestEnd = null;
+                    
+                    assignments.forEach(assignment => {
+                        const assignmentStart = assignment.startDate;
+                        const assignmentEnd = assignment.endDate || employment.endDate;
+                        
+                        if (!earliestStart || assignmentStart < earliestStart) {
+                            earliestStart = assignmentStart;
+                        }
+                        
+                        if (!latestEnd || !assignmentEnd || (assignmentEnd && assignmentEnd > latestEnd)) {
+                            latestEnd = assignmentEnd;
+                        }
+                    });
+                    
+                    // Calculate duration using the span of assignments with this tag within the employment
+                    const [startYear, startMonth] = earliestStart.split('-').map(Number);
+                    let endYear, endMonth;
+                    
+                    if (latestEnd) {
+                        [endYear, endMonth] = latestEnd.split('-').map(Number);
+                    } else {
+                        const now = new Date();
+                        endYear = now.getFullYear();
+                        endMonth = now.getMonth() + 1;
+                    }
+                    
+                    const diffMonths = (endYear - startYear) * 12 + (endMonth - startMonth);
+                    counts[key].totalMonths += Math.max(0, diffMonths);
                 }
-                
-                const diffMonths = (endYear - startYear) * 12 + (endMonth - startMonth);
-                counts[key].totalMonths += Math.max(0, diffMonths);
-            }
+            });
         });
+        
         return Object.values(counts);
     }
 
