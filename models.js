@@ -229,8 +229,8 @@ class DataStore {
     getTagCounts() {
         const counts = {};
         
-        // First, group tags by employment and tag key to avoid double counting
-        const tagsByEmploymentAndKey = {};
+        // Group tags by unique tag key (name + category)
+        const tagsByKey = {};
         
         this.data.tags.forEach(tag => {
             const assignment = this.getAssignment(tag.assignmentId);
@@ -239,42 +239,42 @@ class DataStore {
             const key = `${tag.name}_${tag.category}`;
             const employmentId = assignment.employmentId;
             
-            if (!tagsByEmploymentAndKey[key]) {
-                tagsByEmploymentAndKey[key] = {};
+            if (!tagsByKey[key]) {
+                tagsByKey[key] = {
+                    tag: tag,
+                    employmentPeriods: {}
+                };
             }
             
-            if (!tagsByEmploymentAndKey[key][employmentId]) {
-                tagsByEmploymentAndKey[key][employmentId] = {
-                    tag: tag,
+            if (!tagsByKey[key].employmentPeriods[employmentId]) {
+                tagsByKey[key].employmentPeriods[employmentId] = {
                     assignments: []
                 };
             }
             
-            tagsByEmploymentAndKey[key][employmentId].assignments.push(assignment);
+            tagsByKey[key].employmentPeriods[employmentId].assignments.push(assignment);
         });
         
-        // Calculate counts and durations based on employments, not individual assignments
-        Object.keys(tagsByEmploymentAndKey).forEach(key => {
+        // Calculate counts and durations for unique tags
+        Object.keys(tagsByKey).forEach(key => {
             const [name, category] = key.split('_');
+            const tagData = tagsByKey[key];
             
-            if (!counts[key]) {
-                counts[key] = {
-                    name: name,
-                    category: category,
-                    count: 0,
-                    totalMonths: 0
-                };
-            }
+            counts[key] = {
+                name: name,
+                category: category,
+                count: 1, // Each unique tag is counted once
+                totalMonths: 0
+            };
             
-            Object.keys(tagsByEmploymentAndKey[key]).forEach(employmentId => {
+            // Sum up all time periods where this tag was used across employments
+            Object.keys(tagData.employmentPeriods).forEach(employmentId => {
                 const employment = this.getEmployment(parseInt(employmentId));
-                const tagData = tagsByEmploymentAndKey[key][employmentId];
+                const periodData = tagData.employmentPeriods[employmentId];
                 
                 if (employment) {
-                    counts[key].count++;
-                    
-                    // Use employment duration, but limit it to the actual assignment periods within that employment
-                    const assignments = tagData.assignments;
+                    // Calculate the span of assignments with this tag within the employment
+                    const assignments = periodData.assignments;
                     let earliestStart = null;
                     let latestEnd = null;
                     
