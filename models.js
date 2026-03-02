@@ -303,7 +303,7 @@ class DataStore {
                         endMonth = now.getMonth() + 1;
                     }
                     
-                    const diffMonths = (endYear - startYear) * 12 + (endMonth - startMonth);
+                    const diffMonths = (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
                     counts[key].totalMonths += Math.max(0, diffMonths);
                 }
             });
@@ -449,7 +449,7 @@ const DateUtils = {
             endMonth = now.getMonth() + 1;
         }
         
-        const diffMonths = (endYear - startYear) * 12 + (endMonth - startMonth);
+        const diffMonths = (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
         
         if (diffMonths < 1) {
             return '< 1 month';
