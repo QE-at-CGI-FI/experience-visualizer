@@ -190,7 +190,6 @@ class CareerVisualizer {
             title.textContent = 'Edit Experience Tag';
             document.getElementById('tag-name').value = tag.name;
             document.getElementById('tag-category').value = tag.category;
-            document.getElementById('tag-description').value = tag.description;
         } else {
             title.textContent = 'Add Experience Tag';
             form.reset();
@@ -205,8 +204,7 @@ class CareerVisualizer {
         const formData = {
             assignmentId: this.currentAssignmentId,
             name: document.getElementById('tag-name').value,
-            category: document.getElementById('tag-category').value,
-            description: document.getElementById('tag-description').value
+            category: document.getElementById('tag-category').value
         };
 
         if (this.currentEditingIds.tag) {
@@ -358,7 +356,7 @@ class CareerVisualizer {
         return tags.map(tag => {
             const categoryInfo = TagCategories[tag.category] || {};
             return `
-                <span class="tag ${categoryInfo.className || ''}" title="${this.escapeHtml(tag.description)}">
+                <span class="tag ${categoryInfo.className || ''}">
                     ${this.escapeHtml(tag.name)}
                     <button class="tag-remove" onclick="app.deleteTag(${tag.id})" title="Remove tag">×</button>
                 </span>
@@ -850,22 +848,19 @@ document.addEventListener('DOMContentLoaded', () => {
             dataStore.createTag({
                 assignmentId: sampleAssignment.id,
                 name: 'React',
-                category: 'test target tech',
-                description: 'Frontend framework for building user interfaces'
+                category: 'test target tech'
             });
 
             dataStore.createTag({
                 assignmentId: sampleAssignment.id,
                 name: 'Jest',
-                category: 'test tech',
-                description: 'JavaScript testing framework'
+                category: 'test tech'
             });
 
             dataStore.createTag({
                 assignmentId: sampleAssignment.id,
                 name: 'Team Leadership',
-                category: 'skill',
-                description: 'Leading and mentoring development teams'
+                category: 'skill'
             });
 
             // Refresh the UI

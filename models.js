@@ -166,7 +166,6 @@ class DataStore {
             assignmentId: tagData.assignmentId,
             name: tagData.name,
             category: tagData.category,
-            description: tagData.description || '',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
