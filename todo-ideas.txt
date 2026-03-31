@@ -1,0 +1,11 @@
+Saisko uuden värin jolla voisi indikoida oliko projekti multitoimittajaprojekti vai ei
+Voisko testaajan ns. softs skills lisätä kanssa vai viekö ne liikaa tilaa pihviltä?
+JIRA ja confluence vois olla oletuksena Test tech -tageina jotka vois vaikka ruksia pois Assignmenttia lisättäessä
+Tooltippiin tai johonkin kysymyspallukan taakse tooltippiin vois olla selitys mikä on Test Target Tech / Test Tech ero (for dummies)
+Mietin pitäiskö "käytetyimmät" testaustyökalut olla alasvetovalikossa saatavilla tagina lisättäessä
+Työkalu ei vielä osaa "korjata" jos käyttäjä lisää 2 tagia python ja Python eri tavalla kirjoitettuna assignmentteihin (tai samaan)
+Eniten kokemusta omatuista työkaluista voisi olla joku "tähtilista" jossain yhteenvetona (jonka vois halutessaan piilottaa):
+***** Playwright
+**** Robot Framework
+*** Cypress
+Oisko tarvetta uudelle värille jolla voisi indikoida mitä osaamista henkilöllä ei vielä ole eikä nykyisessä assignmentissa ole tarve/mahdollisuus kehittää mutta haluaisi oppia, esim. teet töitä AWS projektissa ja haluat oppia Azuree tms. Vähän niinku sellainen "tolearn" -lista
