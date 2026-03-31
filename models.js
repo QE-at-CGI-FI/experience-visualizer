@@ -9,8 +9,10 @@ class DataStore {
     // Initialize default data structure
     getDefaultData() {
         return {
+            personName: '',
             employments: [],
             assignments: [],
+            trainings: [],
             tags: [],
             nextId: 1
         };
@@ -24,8 +26,10 @@ class DataStore {
                 const data = JSON.parse(stored);
                 // Ensure all required properties exist
                 return {
+                    personName: data.personName || '',
                     employments: data.employments || [],
                     assignments: data.assignments || [],
+                    trainings: data.trainings || [],
                     tags: data.tags || [],
                     nextId: data.nextId || 1
                 };
@@ -50,6 +54,17 @@ class DataStore {
     // Get next available ID
     getNextId() {
         return this.data.nextId++;
+    }
+
+    // Person name methods
+    getPersonName() {
+        return this.data.personName || '';
+    }
+
+    setPersonName(name) {
+        this.data.personName = name || '';
+        this.saveData();
+        return this.data.personName;
     }
 
     // Employment methods
@@ -84,7 +99,7 @@ class DataStore {
     }
 
     deleteEmployment(id) {
-        // Also delete related assignments and tags
+        // Also delete related assignments, trainings and tags
         this.data.assignments = this.data.assignments.filter(assignment => {
             if (assignment.employmentId === id) {
                 // Delete tags for this assignment
@@ -93,6 +108,9 @@ class DataStore {
             }
             return true;
         });
+
+        // Delete related trainings
+        this.data.trainings = this.data.trainings.filter(training => training.employmentId !== id);
 
         this.data.employments = this.data.employments.filter(emp => emp.id !== id);
         this.saveData();
@@ -157,6 +175,53 @@ class DataStore {
 
     getAssignment(id) {
         return this.data.assignments.find(assignment => assignment.id === id);
+    }
+
+    // Training methods
+    createTraining(trainingData) {
+        const training = {
+            id: this.getNextId(),
+            employmentId: trainingData.employmentId,
+            title: trainingData.title,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        this.data.trainings.push(training);
+        this.saveData();
+        return training;
+    }
+
+    updateTraining(id, updates) {
+        const index = this.data.trainings.findIndex(training => training.id === id);
+        if (index !== -1) {
+            this.data.trainings[index] = {
+                ...this.data.trainings[index],
+                ...updates,
+                updatedAt: new Date().toISOString()
+            };
+            this.saveData();
+            return this.data.trainings[index];
+        }
+        return null;
+    }
+
+    deleteTraining(id) {
+        this.data.trainings = this.data.trainings.filter(training => training.id !== id);
+        this.saveData();
+        return true;
+    }
+
+    getTrainings(employmentId = null) {
+        let trainings = [...this.data.trainings];
+        if (employmentId !== null) {
+            trainings = trainings.filter(training => training.employmentId === employmentId);
+        }
+        return trainings.sort((a, b) => a.title.localeCompare(b.title));
+    }
+
+    getTraining(id) {
+        return this.data.trainings.find(training => training.id === id);
     }
 
     // Tag methods
@@ -316,6 +381,17 @@ class DataStore {
         const exportData = {
             version: '1.0.0',
             exportDate: new Date().toISOString(),
+            metadata: {
+                description: 'Career & Experience Visualizer Data Export',
+                usage: 'To view and visualize this career data, visit: https://qe-at-cgi-fi.github.io/experience-visualizer/',
+                instructions: [
+                    '1. Visit the Career & Experience Visualizer app at the URL above',
+                    '2. Click "Import Data" in the header',
+                    '3. Select this JSON file to restore your career data',
+                    '4. Your employment history, assignments, trainings, and experience tags will be displayed'
+                ],
+                note: 'This file contains your complete career visualization data and can be imported back into the app at any time.'
+            },
             data: this.data
         };
         return JSON.stringify(exportData, null, 2);
@@ -331,15 +407,17 @@ class DataStore {
             }
 
             const newData = {
+                personName: imported.data.personName || '',
                 employments: imported.data.employments || [],
                 assignments: imported.data.assignments || [],
+                trainings: imported.data.trainings || [],
                 tags: imported.data.tags || [],
                 nextId: imported.data.nextId || 1
             };
 
             // Ensure all IDs are numbers and find the highest ID
             let maxId = 0;
-            [...newData.employments, ...newData.assignments, ...newData.tags].forEach(item => {
+            [...newData.employments, ...newData.assignments, ...newData.trainings, ...newData.tags].forEach(item => {
                 if (item.id && typeof item.id === 'number') {
                     maxId = Math.max(maxId, item.id);
                 }

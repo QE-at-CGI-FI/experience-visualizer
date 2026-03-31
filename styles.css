@@ -27,13 +27,59 @@ header {
     margin-bottom: 2rem;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 header h1 {
     font-size: 2.5rem;
     font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.person-name-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.person-name-input {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    color: white;
+    font-size: 1rem;
+    font-weight: 500;
+    padding: 0.5rem 0.75rem;
+    outline: none;
+    transition: all 0.3s ease;
+    min-width: 150px;
+}
+
+.person-name-input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+}
+
+.person-name-input:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.person-name-input:focus {
+    border-color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+}
+
+.person-name-input:not(:placeholder-shown) {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.6);
 }
 
 .header-actions {
@@ -216,6 +262,51 @@ section {
     margin-top: 1rem;
     padding-top: 1rem;
     border-top: 1px solid #dee2e6;
+}
+
+/* Trainings section */
+.trainings-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.trainings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.trainings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.training-card {
+    background-color: #f0f8ff;
+    border: 1px solid #cce7ff;
+    border-radius: 8px;
+    padding: 1rem;
+    position: relative;
+}
+
+.training-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.training-info h5 {
+    color: #2c5282;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.training-actions {
+    display: flex;
+    gap: 0.5rem;
 }
 
 .tags-header {
@@ -549,9 +640,9 @@ form {
     margin-bottom: 1.5rem;
 }
 
-/* ===== CONCISE VIEW STYLES ===== */
+/* ===== FILTER FOR TAGS STYLES ===== */
 
-/* Large modal for concise view */
+/* Large modal for filter for tags */
 .large-modal {
     max-width: 90vw;
     width: 800px;
@@ -825,7 +916,7 @@ form {
     margin-top: 1.5rem;
 }
 
-/* Responsive adjustments for concise view */
+/* Responsive adjustments for filter for tags */
 @media (max-width: 768px) {
     .large-modal {
         width: 95vw;

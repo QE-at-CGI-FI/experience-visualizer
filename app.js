@@ -7,6 +7,7 @@ class CareerVisualizer {
         this.currentEditingIds = {
             employment: null,
             assignment: null,
+            training: null,
             tag: null
         };
         this.init();
@@ -14,6 +15,7 @@ class CareerVisualizer {
 
     init() {
         this.bindEvents();
+        this.loadPersonName();
         this.renderEmployments();
         this.renderTimeline();
         this.renderTagsOverview();
@@ -27,6 +29,10 @@ class CareerVisualizer {
         document.getElementById('import-file').addEventListener('change', (e) => this.importData(e));
         document.getElementById('concise-view-btn').addEventListener('click', () => this.openConciseViewModal());
 
+        // Person name input
+        document.getElementById('person-name').addEventListener('input', (e) => this.handlePersonNameChange(e));
+        document.getElementById('person-name').addEventListener('blur', (e) => this.handlePersonNameChange(e));
+
         // Employment actions
         document.getElementById('add-employment-btn').addEventListener('click', () => this.openEmploymentModal());
         
@@ -38,6 +44,7 @@ class CareerVisualizer {
         // Form submissions
         document.getElementById('employment-form').addEventListener('submit', (e) => this.handleEmploymentSubmit(e));
         document.getElementById('assignment-form').addEventListener('submit', (e) => this.handleAssignmentSubmit(e));
+        document.getElementById('training-form').addEventListener('submit', (e) => this.handleTrainingSubmit(e));
         document.getElementById('tag-form').addEventListener('submit', (e) => this.handleTagSubmit(e));
 
         // Tag filters
@@ -45,7 +52,7 @@ class CareerVisualizer {
             filter.addEventListener('click', (e) => this.handleTagFilter(e));
         });
 
-        // Concise view event handlers
+        // Filter for tags event handlers
         this.bindConciseViewEvents();
 
         // Close modals when clicking outside
@@ -115,6 +122,17 @@ class CareerVisualizer {
         }
     }
 
+    // Person Name Management
+    loadPersonName() {
+        const personName = dataStore.getPersonName();
+        document.getElementById('person-name').value = personName;
+    }
+
+    handlePersonNameChange(e) {
+        const name = e.target.value.trim();
+        dataStore.setPersonName(name);
+    }
+
     // Assignment Management
     openAssignmentModal(employmentId, assignmentId = null) {
         const modal = document.getElementById('assignment-modal');
@@ -173,6 +191,54 @@ class CareerVisualizer {
             this.renderEmployments();
             this.renderTimeline();
             this.renderTagsOverview();
+        }
+    }
+
+    // Training Management
+    openTrainingModal(employmentId, trainingId = null) {
+        const modal = document.getElementById('training-modal');
+        const title = document.getElementById('training-modal-title');
+        const form = document.getElementById('training-form');
+
+        this.currentEmploymentId = employmentId;
+        this.currentEditingIds.training = trainingId;
+
+        if (trainingId) {
+            const training = dataStore.getTraining(trainingId);
+            title.textContent = 'Edit Training/Certification';
+            document.getElementById('training-title').value = training.title;
+        } else {
+            title.textContent = 'Add Training/Certification';
+            form.reset();
+        }
+
+        modal.classList.add('active');
+    }
+
+    handleTrainingSubmit(e) {
+        e.preventDefault();
+        
+        const formData = {
+            employmentId: this.currentEmploymentId,
+            title: document.getElementById('training-title').value
+        };
+
+        if (this.currentEditingIds.training) {
+            dataStore.updateTraining(this.currentEditingIds.training, formData);
+        } else {
+            dataStore.createTraining(formData);
+        }
+
+        this.closeModal();
+        this.renderEmployments();
+        this.renderTimeline();
+    }
+
+    deleteTraining(trainingId) {
+        if (confirm('Are you sure you want to delete this training/certification?')) {
+            dataStore.deleteTraining(trainingId);
+            this.renderEmployments();
+            this.renderTimeline();
         }
     }
 
@@ -254,6 +320,7 @@ class CareerVisualizer {
 
         container.innerHTML = employments.map(employment => {
             const assignments = dataStore.getAssignments(employment.id);
+            const trainings = dataStore.getTrainings(employment.id);
             const duration = DateUtils.calculateDuration(employment.startDate, employment.endDate);
             
             return `
@@ -286,6 +353,18 @@ class CareerVisualizer {
                         </div>
                         <div class="assignments-list">
                             ${this.renderAssignments(assignments)}
+                        </div>
+                    </div>
+
+                    <div class="trainings-section">
+                        <div class="trainings-header">
+                            <h4>Trainings & Certifications (${trainings.length})</h4>
+                            <button class="btn btn-small btn-primary" onclick="app.openTrainingModal(${employment.id})">
+                                Add Training
+                            </button>
+                        </div>
+                        <div class="trainings-list">
+                            ${this.renderTrainings(trainings)}
                         </div>
                     </div>
                 </div>
@@ -341,6 +420,36 @@ class CareerVisualizer {
                         </div>
                         <div class="tags-list">
                             ${this.renderTags(tags)}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    renderTrainings(trainings) {
+        if (trainings.length === 0) {
+            return `
+                <div class="empty-state">
+                    <p>No trainings or certifications yet. Add your first training to start tracking professional development.</p>
+                </div>
+            `;
+        }
+
+        return trainings.map(training => {
+            return `
+                <div class="training-card" data-training-id="${training.id}">
+                    <div class="training-header">
+                        <div class="training-info">
+                            <h5>${this.escapeHtml(training.title)}</h5>
+                        </div>
+                        <div class="training-actions">
+                            <button class="btn btn-small btn-secondary" onclick="app.openTrainingModal(${training.employmentId}, ${training.id})">
+                                Edit
+                            </button>
+                            <button class="btn btn-small btn-danger" onclick="app.deleteTraining(${training.id})">
+                                Delete
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -486,6 +595,7 @@ class CareerVisualizer {
             try {
                 const result = dataStore.importData(event.target.result);
                 if (result.success) {
+                    this.loadPersonName();
                     this.renderEmployments();
                     this.renderTimeline();
                     this.renderTagsOverview();
@@ -504,10 +614,10 @@ class CareerVisualizer {
         e.target.value = '';
     }
 
-    // ===== CONCISE VIEW FUNCTIONALITY =====
+    // ===== FILTER FOR TAGS FUNCTIONALITY =====
     
     bindConciseViewEvents() {
-        // Category filters in concise view modal
+        // Category filters in filter for tags modal
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('category-filter')) {
                 document.querySelectorAll('.category-filter').forEach(filter => {
@@ -518,7 +628,7 @@ class CareerVisualizer {
             }
         });
 
-        // Concise view modal actions
+        // Filter for tags modal actions
         document.getElementById('select-all-tags').addEventListener('click', () => this.selectAllTags());
         document.getElementById('clear-all-tags').addEventListener('click', () => this.clearAllTags());
         document.getElementById('generate-report').addEventListener('click', () => this.generateConciseReport());

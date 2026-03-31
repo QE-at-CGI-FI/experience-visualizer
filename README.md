@@ -1,6 +1,8 @@
 # Career & Experience Visualizer
 
-A comprehensive web application for tracking and visualizing your career journey, including employment history, project assignments, and experience tags.
+A comprehensive web application for tracking and visualizing your career journey, including employment history, project assignments, trainings & certifications, and experience tags.
+
+Hosted at [https://qe-at-cgi-fi.github.io/experience-visualizer/](https://qe-at-cgi-fi.github.io/experience-visualizer/)
 
 ## Features
 
@@ -8,6 +10,7 @@ A comprehensive web application for tracking and visualizing your career journey
 
 - **Employment History**: Track job positions with companies, titles, and date ranges
 - **Project Assignments**: Document specific projects and assignments within each employment
+- **Trainings & Certifications**: Record professional development, courses, and certifications completed during each employment
 - **Experience Tags**: Tag your experiences with categorized skills and technologies
 
 ### 🏷️ Tag Categories
@@ -34,9 +37,10 @@ A comprehensive web application for tracking and visualizing your career journey
 1. Open `index.html` in your web browser
 2. Start by adding your employment history using the "Add Employment" button
 3. For each employment, add specific assignments or projects
-4. Tag each assignment with relevant technologies, tools, and skills
-5. View your career progression in the timeline section
-6. Explore your experience tags in the overview section
+4. Add trainings and certifications you completed during each employment
+5. Tag each assignment with relevant technologies, tools, and skills
+6. View your career progression in the timeline section
+7. Explore your experience tags in the overview section
 
 ## Usage Instructions
 
@@ -52,6 +56,13 @@ A comprehensive web application for tracking and visualizing your career journey
 2. Click "Add Assignment" within that employment
 3. Enter assignment title, description, start/end dates
 4. Save to create the assignment
+
+### Adding Trainings & Certifications
+
+1. Navigate to an employment card
+2. Click "Add Training" within that employment
+3. Enter the training or certification title
+4. Save to create the training record
 
 ### Adding Experience Tags
 
