@@ -21,4 +21,6 @@ Oisko tarvetta uudelle värille jolla voisi indikoida mitä osaamista henkilöll
 - Miten koulutuksen voisi lisätä silleen että saisi niistä kokemuksiin? Esim. tein Kotlinista opinnäytetyön niin 
 siitä saisi Kotlin kokemusta.
 
+- assignmentin liikuttaminen drag and droppaamalla toisen työnantajan alle (jos tulee vahingossa lisättyä väärään tai on ns. comebacker
+
 - toimialaosaaminen ja pysyvät taidot - pitäisikö niille olla paikka, suuntana "sähköinen CV"
