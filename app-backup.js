@@ -370,51 +370,41 @@ class CareerVisualizer {
                 </div>
             `;
         }).join('');
-        
-        // Setup drag and drop functionality after DOM is updated
-        requestAnimationFrame(() => this.setupDragAndDrop());
     }
 
     // Setup drag and drop event listeners after rendering
     setupDragAndDrop() {
-        console.log('Setting up drag and drop...');
-        
-        // Remove existing listeners by cloning elements (cleaner approach)
+        // Remove existing listeners first
         document.querySelectorAll('.assignment-card').forEach(card => {
-            const newCard = card.cloneNode(true);
-            card.parentNode.replaceChild(newCard, card);
+            card.removeEventListener('dragstart', this.handleDragStart.bind(this));
+            card.removeEventListener('dragend', this.handleDragEnd.bind(this));
         });
 
-        // Find draggable assignment cards
-        const assignmentCards = document.querySelectorAll('.assignment-card[draggable="true"]');
-        console.log('Found', assignmentCards.length, 'draggable assignment cards');
+        document.querySelectorAll('.employment-card').forEach(card => {
+            card.removeEventListener('dragover', this.handleDragOver.bind(this));
+            card.removeEventListener('drop', this.handleDrop.bind(this));
+            card.removeEventListener('dragenter', this.handleDragEnter.bind(this));
+            card.removeEventListener('dragleave', this.handleDragLeave.bind(this));
+        });
 
         // Add drag listeners to assignment cards
-        assignmentCards.forEach(card => {
+        document.querySelectorAll('.assignment-card[draggable="true"]').forEach(card => {
             card.addEventListener('dragstart', this.handleDragStart.bind(this));
             card.addEventListener('dragend', this.handleDragEnd.bind(this));
         });
 
-        // Find employment cards as drop zones
-        const employmentCards = document.querySelectorAll('.employment-card');
-        console.log('Found', employmentCards.length, 'employment drop zones');
-
         // Add drop listeners to employment cards
-        employmentCards.forEach(card => {
+        document.querySelectorAll('.employment-card').forEach(card => {
             card.addEventListener('dragover', this.handleDragOver.bind(this));
             card.addEventListener('drop', this.handleDrop.bind(this));
             card.addEventListener('dragenter', this.handleDragEnter.bind(this));
             card.addEventListener('dragleave', this.handleDragLeave.bind(this));
         });
-        
-        console.log('Drag and drop setup complete');
     }
 
     handleDragStart(e) {
-        console.log('Drag started');
         const assignmentCard = e.currentTarget;
         const assignmentId = parseInt(assignmentCard.getAttribute('data-assignment-id'));
-        console.log('Dragging assignment ID:', assignmentId);
         
         // Store the assignment ID being dragged
         e.dataTransfer.setData('text/plain', assignmentId.toString());
@@ -483,43 +473,16 @@ class CareerVisualizer {
     }
 
     handleDrop(e) {
-        console.log('Drop event triggered');
         e.preventDefault();
-        e.stopPropagation();
         
         const assignmentId = parseInt(e.dataTransfer.getData('text/plain'));
-        console.log('Dropping assignment ID:', assignmentId);
-        
-        // Find target employment card
-        let targetEmploymentCard = e.currentTarget;
-        if (!targetEmploymentCard.classList.contains('employment-card')) {
-            targetEmploymentCard = e.currentTarget.closest('.employment-card');
-        }
-        
-        if (!targetEmploymentCard) {
-            console.error('Could not find target employment card');
-            return;
-        }
-        
+        const targetEmploymentCard = e.currentTarget.closest('.employment-card');
         const targetEmploymentId = parseInt(targetEmploymentCard.getAttribute('data-employment-id'));
-        console.log('Target employment ID:', targetEmploymentId);
         
         // Get the assignment being moved
         const assignment = dataStore.getAssignment(assignmentId);
         
-        if (!assignment) {
-            console.error('Assignment not found:', assignmentId);
-            return;
-        }
-        
-        if (assignment.employmentId === targetEmploymentId) {
-            console.log('Assignment already in this employment, no move needed');
-            return;
-        }
-        
-        console.log('Moving assignment from employment', assignment.employmentId, 'to', targetEmploymentId);
-        
-        try {
+        if (assignment && assignment.employmentId !== targetEmploymentId) {
             // Update the assignment's employment
             dataStore.updateAssignment(assignmentId, { employmentId: targetEmploymentId });
             
@@ -529,23 +492,14 @@ class CareerVisualizer {
             
             // Show success feedback
             this.showNotification(`Assignment "${assignment.title}" moved successfully!`, 'success');
-        } catch (error) {
-            console.error('Error moving assignment:', error);
-            this.showNotification('Error moving assignment. Please try again.', 'error');
         }
         
         // Clean up visual feedback
-        this.cleanupDragFeedback();
-    }
-    
-    cleanupDragFeedback() {
-        document.querySelectorAll('.employment-card').forEach(card => {
-            card.classList.remove('drag-over');
-        });
-        
-        document.querySelectorAll('.assignments-list').forEach(list => {
-            list.classList.remove('drag-over');
-        });
+        targetEmploymentCard.classList.remove('drag-over');
+        const assignmentsList = targetEmploymentCard.querySelector('.assignments-list');
+        if (assignmentsList) {
+            assignmentsList.classList.remove('drag-over');
+        }
     }
 
     // Utility method to show notifications
@@ -585,6 +539,136 @@ class CareerVisualizer {
                 document.body.removeChild(notification);
             }, 300);
         }, 3000);
+    }
+
+    // Setup drag and drop event listeners after rendering
+    setupDragAndDrop() {
+        // Remove existing listeners first
+        document.querySelectorAll('.assignment-card').forEach(card => {
+            card.removeEventListener('dragstart', this.handleDragStart.bind(this));
+            card.removeEventListener('dragend', this.handleDragEnd.bind(this));
+        });
+
+        document.querySelectorAll('.employment-card').forEach(card => {
+            card.removeEventListener('dragover', this.handleDragOver.bind(this));
+            card.removeEventListener('drop', this.handleDrop.bind(this));
+            card.removeEventListener('dragenter', this.handleDragEnter.bind(this));
+            card.removeEventListener('dragleave', this.handleDragLeave.bind(this));
+        });
+
+        // Add drag listeners to assignment cards
+        document.querySelectorAll('.assignment-card[draggable="true"]').forEach(card => {
+            card.addEventListener('dragstart', this.handleDragStart.bind(this));
+            card.addEventListener('dragend', this.handleDragEnd.bind(this));
+        });
+
+        // Add drop listeners to employment cards
+        document.querySelectorAll('.employment-card').forEach(card => {
+            card.addEventListener('dragover', this.handleDragOver.bind(this));
+            card.addEventListener('drop', this.handleDrop.bind(this));
+            card.addEventListener('dragenter', this.handleDragEnter.bind(this));
+            card.addEventListener('dragleave', this.handleDragLeave.bind(this));
+        });
+    }
+
+    handleDragStart(e) {
+        const assignmentCard = e.currentTarget;
+        const assignmentId = parseInt(assignmentCard.getAttribute('data-assignment-id'));
+        
+        // Store the assignment ID being dragged
+        e.dataTransfer.setData('text/plain', assignmentId.toString());
+        e.dataTransfer.effectAllowed = 'move';
+        
+        // Add visual feedback
+        assignmentCard.classList.add('dragging');
+        
+        // Store reference for cleanup
+        this.draggedElement = assignmentCard;
+    }
+
+    handleDragEnd(e) {
+        // Clean up visual feedback
+        e.currentTarget.classList.remove('dragging');
+        
+        // Clean up all drop zones
+        document.querySelectorAll('.employment-card').forEach(card => {
+            card.classList.remove('drag-over');
+        });
+        
+        document.querySelectorAll('.assignments-list').forEach(list => {
+            list.classList.remove('drag-over');
+        });
+        
+        this.draggedElement = null;
+    }
+
+    handleDragEnter(e) {
+        e.preventDefault();
+        const employmentCard = e.currentTarget.closest('.employment-card');
+        if (employmentCard && this.draggedElement) {
+            employmentCard.classList.add('drag-over');
+            
+            // Also highlight the assignments list
+            const assignmentsList = employmentCard.querySelector('.assignments-list');
+            if (assignmentsList) {
+                assignmentsList.classList.add('drag-over');
+            }
+        }
+    }
+
+    handleDragLeave(e) {
+        const employmentCard = e.currentTarget;
+        const rect = employmentCard.getBoundingClientRect();
+        
+        // Only remove highlight if mouse is actually outside the employment card
+        if (
+            e.clientX < rect.left ||
+            e.clientX > rect.right ||
+            e.clientY < rect.top ||
+            e.clientY > rect.bottom
+        ) {
+            employmentCard.classList.remove('drag-over');
+            
+            const assignmentsList = employmentCard.querySelector('.assignments-list');
+            if (assignmentsList) {
+                assignmentsList.classList.remove('drag-over');
+            }
+        }
+    }
+
+    handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    }
+
+    handleDrop(e) {
+        e.preventDefault();
+        
+        const assignmentId = parseInt(e.dataTransfer.getData('text/plain'));
+        const targetEmploymentCard = e.currentTarget.closest('.employment-card');
+        const targetEmploymentId = parseInt(targetEmploymentCard.getAttribute('data-employment-id'));
+        
+        // Get the assignment being moved
+        const assignment = dataStore.getAssignment(assignmentId);
+        
+        if (assignment && assignment.employmentId !== targetEmploymentId) {
+            // Update the assignment's employment
+            dataStore.updateAssignment(assignmentId, { employmentId: targetEmploymentId });
+            
+            // Re-render the UI
+            this.renderEmployments();
+            this.renderTimeline();
+            
+            // Show success feedback
+            this.showNotification(`Assignment "${assignment.title}" moved successfully!`, 'success');
+        }
+        
+        // Clean up visual feedback
+        targetEmploymentCard.classList.remove('drag-over');
+        const assignmentsList = targetEmploymentCard.querySelector('.assignments-list');
+        if (assignmentsList) {
+            assignmentsList.classList.remove('drag-over');
+        }
     }
 
     renderAssignments(assignments) {

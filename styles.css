@@ -258,6 +258,57 @@ section {
     gap: 0.5rem;
 }
 
+/* Drag and Drop Styles */
+.assignment-card {
+    cursor: move;
+    user-select: none;
+}
+
+.assignment-card[draggable="true"]:hover {
+    border-color: #FF46A2;
+    box-shadow: 0 2px 4px rgba(255, 70, 162, 0.25);
+}
+
+.assignment-card.dragging {
+    opacity: 0.5;
+    transform: rotate(2deg);
+    border-color: #FF46A2;
+    box-shadow: 0 4px 12px rgba(255, 70, 162, 0.3);
+}
+
+.employment-card.drag-over {
+    border-color: #FF46A2;
+    background-color: rgba(255, 70, 162, 0.05);
+    box-shadow: 0 4px 12px rgba(255, 70, 162, 0.2);
+}
+
+.assignments-list.drag-over {
+    background-color: rgba(255, 70, 162, 0.08);
+    border: 2px dashed #FF46A2;
+    border-radius: 8px;
+    padding: 1rem;
+    min-height: 60px;
+    position: relative;
+}
+
+.assignments-list.drag-over::before {
+    content: "Drop assignment here";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #FF46A2;
+    font-weight: 500;
+    font-size: 0.875rem;
+    pointer-events: none;
+}
+
+.assignment-card.drag-placeholder {
+    background-color: rgba(255, 70, 162, 0.1);
+    border: 2px dashed #FF46A2;
+    opacity: 0.7;
+}
+
 .tags-section {
     margin-top: 1rem;
     padding-top: 1rem;
