@@ -24,3 +24,9 @@ siitä saisi Kotlin kokemusta.
 [x] assignmentin liikuttaminen drag and droppaamalla toisen työnantajan alle (jos tulee vahingossa lisättyä väärään tai on ns. comebacker
 
 - toimialaosaaminen ja pysyvät taidot - pitäisikö niille olla paikka, suuntana "sähköinen CV"
+
+- Career timeline -otsikon perään koko työuran kesto vuosina ja kk, esim. 20 years 2 months
+- Pitäskö sertit näyttää Career timelinessa? Nyt vähän hautautuu tonne työsuhteisiin
+- Junioreita ja miksei senioreitakin ajatelleen: miten tähän voisi tuoda mukaan oman relevantin "hobby-projektin" tai esim. opinnäytteen teossa hankitun osaamisen?
+
+- tests? No tests? You are living on the edge. The vibe edge, waiting to fall off... 
