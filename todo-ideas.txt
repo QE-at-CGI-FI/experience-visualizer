@@ -20,3 +20,5 @@ Oisko tarvetta uudelle värille jolla voisi indikoida mitä osaamista henkilöll
 - Rivitysmahdollisuus, jos työn kuvaus sisältää oleellisesti erilaisia asioita samaan työhön niputettuna
 - Miten koulutuksen voisi lisätä silleen että saisi niistä kokemuksiin? Esim. tein Kotlinista opinnäytetyön niin 
 siitä saisi Kotlin kokemusta.
+
+- toimialaosaaminen ja pysyvät taidot - pitäisikö niille olla paikka, suuntana "sähköinen CV"
