@@ -9,3 +9,14 @@ Eniten kokemusta omatuista työkaluista voisi olla joku "tähtilista" jossain yh
 **** Robot Framework
 *** Cypress
 Oisko tarvetta uudelle värille jolla voisi indikoida mitä osaamista henkilöllä ei vielä ole eikä nykyisessä assignmentissa ole tarve/mahdollisuus kehittää mutta haluaisi oppia, esim. teet töitä AWS projektissa ja haluat oppia Azuree tms. Vähän niinku sellainen "tolearn" -lista
+
+- Lisätyn tagin editointi klikkaamalla tagia (nyt pitää poistaa ja lisästä uudelleen)
+- Git ja GitHub oletustageiksi assignmenttiin jos on ns. Test Automation -rooli
+- Näytä vain CGI-kokemus -täppä
+- Mahdollisuus järjestää tagit väreittäin aakkosjärjestykseen
+- Mahdollisuus laskea kokemus vain tietystä ajankohdasta lähtien, esim. viisi vuotta nykyhetkestä taaksepäin
+
+- Jos lisää Robot Frameworkin tagina, pitäisikö Python, Robocop ja joku kirjasto lisätä automaattisesti myös?
+- Rivitysmahdollisuus, jos työn kuvaus sisältää oleellisesti erilaisia asioita samaan työhön niputettuna
+- Miten koulutuksen voisi lisätä silleen että saisi niistä kokemuksiin? Esim. tein Kotlinista opinnäytetyön niin 
+siitä saisi Kotlin kokemusta.
