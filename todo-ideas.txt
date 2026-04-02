@@ -30,3 +30,5 @@ siitä saisi Kotlin kokemusta.
 - Junioreita ja miksei senioreitakin ajatelleen: miten tähän voisi tuoda mukaan oman relevantin "hobby-projektin" tai esim. opinnäytteen teossa hankitun osaamisen?
 
 - tests? No tests? You are living on the edge. The vibe edge, waiting to fall off... 
+
+- figure out how to show experience ("someone let me be in position to do something called this") and skill ("I can confidently say I can do this and have a way of showcasing excellence") 
