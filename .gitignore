@@ -1,2 +1,10 @@
 # Career visualizer export files
 career-visualizer-export-*.json
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

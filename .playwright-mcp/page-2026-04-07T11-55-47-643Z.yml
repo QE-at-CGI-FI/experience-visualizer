@@ -1,0 +1,28 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - heading "Career & Experience Visualizer" [level=1] [ref=e5]
+      - textbox "Enter person's name..." [ref=e7]
+    - generic [ref=e8]:
+      - button "Filter for tags" [ref=e9] [cursor=pointer]
+      - button "Export Data" [ref=e10] [cursor=pointer]
+      - button "Import Data" [ref=e11] [cursor=pointer]
+  - main [ref=e12]:
+    - generic [ref=e13]:
+      - generic [ref=e14]:
+        - heading "Employment History" [level=2] [ref=e15]
+        - button "Add Employment" [ref=e16] [cursor=pointer]
+      - generic [ref=e18]:
+        - heading "No employment history yet" [level=3] [ref=e19]
+        - paragraph [ref=e20]: Start by adding your first employment experience.
+    - generic [ref=e21]:
+      - heading "Career Timeline" [level=2] [ref=e22]
+      - paragraph [ref=e25]: Your career timeline will appear here once you add employment history.
+    - generic [ref=e26]:
+      - heading "Experience Tags Overview" [level=2] [ref=e27]
+      - generic [ref=e28]:
+        - button "All" [ref=e29] [cursor=pointer]
+        - button "Test Target Tech" [ref=e30] [cursor=pointer]
+        - button "Test Tech" [ref=e31] [cursor=pointer]
+        - button "Skills" [ref=e32] [cursor=pointer]
+      - paragraph [ref=e35]: No experience tags found for the selected category.
