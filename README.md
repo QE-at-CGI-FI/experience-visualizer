@@ -1,5 +1,17 @@
 # Career & Experience Visualizer
 
+# Getting started
+
+Install playwright
+`npm init playwright@latest`
+
+Install agents
+`npx playwright init-agents --loop=vscode`
+
+Install playwright CLI
+`npm install -g @playwright/cli@latest`
+`playwright-cli install --skills`
+
 A comprehensive web application for tracking and visualizing your career journey, including employment history, project assignments, trainings & certifications, and experience tags.
 
 Hosted at [https://qe-at-cgi-fi.github.io/experience-visualizer/](https://qe-at-cgi-fi.github.io/experience-visualizer/)
