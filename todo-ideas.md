@@ -4,6 +4,10 @@ List of todo ideas and possible new features for Career & Experience Visualizer
 
 ## Employment History
 
+### AI matching on UI
+
+- Add in-browser AI matching
+
 ### General
 
 - **Tests? No tests? You are living on the edge. The vibe edge, waiting to fall off...**
@@ -20,6 +24,7 @@ List of todo ideas and possible new features for Career & Experience Visualizer
 ****   Robot Framework
 ***    Cypress
 ```
+
 - Consider adding a separate section for volunteering work?
 - Make tag colours customizable for the user under General Settings etc.
 - What if a person has been on a same project for 6 years and a new technology X or software Y is born and taken into use after 3 years, how should the experience for tags X and Y counted? One can't yet have 10 years of experience on Microsoft 365 Copilot...
@@ -66,5 +71,5 @@ List of todo ideas and possible new features for Career & Experience Visualizer
 
 # Known bugs
 
-- Add assignment: "Empty" employment can be added which results in an employment without a title and Invalid Date - Present (NaN year) 
+- Add assignment: "Empty" employment can be added which results in an employment without a title and Invalid Date - Present (NaN year)
 - Career timeline: unique experience tags sum is counted only after refreshing browser (when tag is added or removed to an assignment)
