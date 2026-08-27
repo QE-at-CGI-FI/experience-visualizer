@@ -577,6 +577,12 @@ const TagCategories = {
         className: 'test-tech',
         color: '#059669',
         backgroundColor: '#dcfce7'
+    },
+    'domain': {
+        label: 'Domain',
+        className: 'domain',
+        color: '#7c3aed',
+        backgroundColor: '#ede9fe'
     }
 };
 

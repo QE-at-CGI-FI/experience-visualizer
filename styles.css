@@ -399,6 +399,11 @@ section {
     color: #ea580c;
 }
 
+.tag.domain {
+    background-color: #ede9fe;
+    color: #7c3aed;
+}
+
 .tag-remove {
     background: none;
     border: none;

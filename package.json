@@ -2,7 +2,7 @@
   "name": "experience-visualizer",
   "version": "1.0.0",
   "description": "Install playwright `npm init playwright@latest`",
-  "main": "app-backup.js",
+  "main": "app.js",
   "scripts": {},
   "repository": {
     "type": "git",
