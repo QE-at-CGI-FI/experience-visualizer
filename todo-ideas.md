@@ -11,7 +11,7 @@ List of todo ideas and possible new features for Career & Experience Visualizer
 ### General
 
 - **Tests? No tests? You are living on the edge. The vibe edge, waiting to fall off...**
-- Add a "Show only CGI experience" filter option.
+- [x] Add a "Show only CGI experience" filter option.
 - Provide an option to calculate experience only from a specific time window (e.g., the last five years).
 - Enable adding relevant hobby projects or thesis‑based skills, especially useful for juniors but applicable to seniors as well.
 - Figure out how to show experience ("someone let me be in position to do something called this") and skill ("I can confidently say I can do this and have a way of showcasing excellence").

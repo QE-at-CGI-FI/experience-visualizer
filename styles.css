@@ -84,7 +84,61 @@ header h1 {
 
 .header-actions {
     display: flex;
+    flex-direction: column;
+    align-items: flex-end;
     gap: 1rem;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.employer-filter {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.employer-filter label {
+    cursor: pointer;
+}
+
+.employer-filter select {
+    padding: 0.4rem 0.6rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    max-width: 220px;
+}
+
+.employer-filter select:focus {
+    border-color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.employer-filter select option {
+    color: #333;
+}
+
+@media (max-width: 768px) {
+    .header-actions {
+        align-items: center;
+    }
+
+    .header-buttons {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
 }
 
 /* Buttons */

@@ -290,16 +290,22 @@ class DataStore {
         return tagsByCategory;
     }
 
-    getTagCounts() {
+    getTagCounts(employmentPredicate = null) {
         const counts = {};
-        
+
         // Group tags by unique tag key (name + category)
         const tagsByKey = {};
-        
+
         this.data.tags.forEach(tag => {
             const assignment = this.getAssignment(tag.assignmentId);
             if (!assignment) return;
-            
+
+            // Optionally restrict to assignments under matching employments
+            if (employmentPredicate) {
+                const employment = this.getEmployment(assignment.employmentId);
+                if (!employment || !employmentPredicate(employment)) return;
+            }
+
             const key = `${tag.name}_${tag.category}`;
             const employmentId = assignment.employmentId;
             

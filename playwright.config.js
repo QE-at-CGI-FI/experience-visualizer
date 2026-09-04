@@ -26,8 +26,8 @@ export default defineConfig({
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    /* Base URL to use in actions like `await page.goto('')`. */
-    // baseURL: 'http://localhost:3000',
+    /* Base URL used by tests that exercise the local working copy (e.g. features not yet deployed). */
+    baseURL: 'http://localhost:4173',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -71,11 +71,11 @@ export default defineConfig({
     // },
   ],
 
-  /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   url: 'http://localhost:3000',
-  //   reuseExistingServer: !process.env.CI,
-  // },
+  /* Serve the static app locally so tests can run against the current working copy. */
+  webServer: {
+    command: 'python3 -m http.server 4173',
+    url: 'http://localhost:4173/index.html',
+    reuseExistingServer: !process.env.CI,
+  },
 });
 

@@ -10,6 +10,7 @@ class CareerVisualizer {
             training: null,
             tag: null
         };
+        this.employerFilter = '__all__';
         this.init();
     }
 
@@ -28,6 +29,7 @@ class CareerVisualizer {
         document.getElementById('import-btn').addEventListener('click', () => this.openImportDialog());
         document.getElementById('import-file').addEventListener('change', (e) => this.importData(e));
         document.getElementById('concise-view-btn').addEventListener('click', () => this.openConciseViewModal());
+        document.getElementById('employer-filter-select').addEventListener('change', (e) => this.handleEmployerFilterChange(e));
 
         // Person name input
         document.getElementById('person-name').addEventListener('input', (e) => this.handlePersonNameChange(e));
@@ -306,10 +308,18 @@ class CareerVisualizer {
     // Rendering Methods
     renderEmployments() {
         const container = document.getElementById('employment-list');
-        const employments = dataStore.getEmployments();
+        this.populateEmployerFilter();
+        const employments = this.applyEmployerFilter(dataStore.getEmployments());
 
         if (employments.length === 0) {
-            container.innerHTML = `
+            container.innerHTML = this.employerFilter !== '__all__'
+                ? `
+                <div class="empty-state">
+                    <h3>No employment history for ${this.escapeHtml(this.employerFilter)}</h3>
+                    <p>Choose "All employers" to see your full employment history.</p>
+                </div>
+            `
+                : `
                 <div class="empty-state">
                     <h3>No employment history yet</h3>
                     <p>Start by adding your first employment experience.</p>
@@ -690,10 +700,16 @@ class CareerVisualizer {
 
     renderTimeline() {
         const container = document.getElementById('timeline');
-        const timelineData = dataStore.getTimelineData();
+        const timelineData = this.applyEmployerFilter(dataStore.getTimelineData());
 
         if (timelineData.length === 0) {
-            container.innerHTML = `
+            container.innerHTML = this.employerFilter !== '__all__'
+                ? `
+                <div class="empty-state">
+                    <p>No timeline entries for ${this.escapeHtml(this.employerFilter)}. Choose "All employers" to see your full timeline.</p>
+                </div>
+            `
+                : `
                 <div class="empty-state">
                     <p>Your career timeline will appear here once you add employment history.</p>
                 </div>
@@ -731,7 +747,9 @@ class CareerVisualizer {
 
     renderTagsOverview() {
         const container = document.getElementById('tags-cloud');
-        const tagCounts = dataStore.getTagCounts();
+        const tagCounts = dataStore.getTagCounts(
+            this.employerFilter !== '__all__' ? (employment => this.matchesEmployerFilter(employment)) : null
+        );
         const activeFilter = document.querySelector('.tag-filter.active').dataset.category;
 
         const filteredTags = activeFilter === 'all' 
@@ -772,6 +790,48 @@ class CareerVisualizer {
         });
         e.target.classList.add('active');
         this.renderTagsOverview();
+    }
+
+    // Employer Filter
+    handleEmployerFilterChange(e) {
+        this.employerFilter = e.target.value;
+        this.renderEmployments();
+        this.renderTimeline();
+        this.renderTagsOverview();
+    }
+
+    // Rebuild the employer dropdown from the companies present in employment history
+    populateEmployerFilter() {
+        const select = document.getElementById('employer-filter-select');
+        if (!select) return;
+
+        const companies = [...new Set(
+            dataStore.getEmployments()
+                .map(emp => (emp.company || '').trim())
+                .filter(company => company)
+        )].sort((a, b) => a.localeCompare(b));
+
+        // Drop a stale selection if that employer no longer exists
+        if (this.employerFilter !== '__all__' && !companies.includes(this.employerFilter)) {
+            this.employerFilter = '__all__';
+        }
+
+        select.innerHTML = '';
+        select.add(new Option('All employers', '__all__'));
+        companies.forEach(company => select.add(new Option(company, company)));
+        select.value = this.employerFilter;
+    }
+
+    // True when the employment (or timeline entry) matches the active employer filter
+    matchesEmployerFilter(employment) {
+        if (this.employerFilter === '__all__') return true;
+        return (employment && employment.company ? employment.company.trim() : '') === this.employerFilter;
+    }
+
+    // Restrict a list of employments to the active employer filter
+    applyEmployerFilter(employments) {
+        if (this.employerFilter === '__all__') return employments;
+        return employments.filter(employment => this.matchesEmployerFilter(employment));
     }
 
     // Export/Import functionality

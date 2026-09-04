@@ -322,6 +322,26 @@ The Career & Experience Visualizer is a web application for tracking career prog
     - expect: Field can be updated
     - expect: New name replaces the old one
 
+#### 5.4. Filter Employment by Employer
+
+**File:** `tests/filtering/filter-by-employer.spec.ts`
+
+**Steps:**
+  1. Navigate to the application with the seeded employment present, then add a second employment at a different company
+    - expect: The 'Filter by employer' dropdown lists 'All employers' plus every distinct company in Employment History
+    - expect: With 'All employers' selected, all employments and all Career Timeline entries are visible
+  2. Select one employer from the 'Filter by employer' dropdown
+    - expect: Employment History shows only records for the selected employer
+    - expect: Career Timeline shows only entries for the selected employer
+    - expect: Experience Tags Overview is recalculated from the selected employer's assignments only
+  3. Select an employer that has no tagged assignments
+    - expect: Experience Tags Overview shows the 'No experience tags found' empty state
+  4. Switch the dropdown back to 'All employers'
+    - expect: Employment History, Career Timeline, and Experience Tags Overview show the full unfiltered data again
+  5. While an employer is selected, delete that employer's only employment record
+    - expect: The dropdown option for that employer is removed
+    - expect: The filter falls back to 'All employers' and the remaining data is shown
+
 ### 6. Form Validation and Error Handling
 
 **Seed:** `tests/seed.spec.ts`

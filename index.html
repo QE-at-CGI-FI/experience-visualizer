@@ -16,10 +16,18 @@
                 </div>
             </div>
             <div class="header-actions">
-                <button id="concise-view-btn" class="btn btn-primary">Filter for tags</button>
-                <button id="export-btn" class="btn btn-secondary">Export Data</button>
-                <button id="import-btn" class="btn btn-secondary">Import Data</button>
-                <input type="file" id="import-file" accept=".json" style="display: none;">
+                <div class="header-buttons">
+                    <button id="concise-view-btn" class="btn btn-primary">Filter for tags</button>
+                    <button id="export-btn" class="btn btn-secondary">Export Data</button>
+                    <button id="import-btn" class="btn btn-secondary">Import Data</button>
+                    <input type="file" id="import-file" accept=".json" style="display: none;">
+                </div>
+                <div class="employer-filter" title="Show only experience from the selected employer">
+                    <label for="employer-filter-select">Filter by employer:</label>
+                    <select id="employer-filter-select" aria-label="Filter by employer">
+                        <option value="__all__">All employers</option>
+                    </select>
+                </div>
             </div>
         </header>
 
