@@ -12,7 +12,9 @@ test.describe('Core Employment Management', () => {
     await expect(page.getByRole('heading', { name: 'Career & Experience Visualizer' })).toBeVisible();
 
     // Verify Employment History section is visible
-    await expect(page.getByRole('heading', { name: 'Employment History' })).toBeVisible();
+    // (exact match avoids also matching the "No employment history yet" empty-state
+    // heading that briefly renders before sample data is seeded in a fresh context)
+    await expect(page.getByRole('heading', { name: 'Employment History', exact: true })).toBeVisible();
 
     // Click the 'Add Employment' button
     await page.getByRole('button', { name: 'Add Employment' }).click();
