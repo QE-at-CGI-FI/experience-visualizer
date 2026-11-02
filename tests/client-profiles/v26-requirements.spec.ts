@@ -23,6 +23,8 @@ test.describe('Client Profiles', () => {
     await page.getByRole('textbox', { name: 'Start Date:' }).fill('2023-01');
     await page.getByRole('textbox', { name: 'V26 description:' }).fill('Fasilitoin yhteiskehittämisen työpajoja.');
     await page.getByRole('spinbutton', { name: 'Estimated effort (htp):' }).fill('45');
+    await page.getByRole('textbox', { name: 'Client contact name:' }).fill('Teija Asiakas');
+    await page.getByRole('textbox', { name: 'Client contact email:' }).fill('teija.asiakas@example.com');
     await page.getByRole('checkbox', { name: /M2\.3/ }).check();
     await page.getByRole('checkbox', { name: /S4/ }).check();
     await page.getByRole('button', { name: 'Save Assignment' }).click();
@@ -33,6 +35,9 @@ test.describe('Client Profiles', () => {
     await expect(clientSection).toContainText('M2.3');
     await expect(clientSection).toContainText('S4');
     await expect(clientSection).toContainText('Estimated effort: 45 htp');
+    await expect(clientSection).toContainText('Client contact: Teija Asiakas');
+    await expect(clientSection.getByRole('link', { name: 'teija.asiakas@example.com' }))
+      .toHaveAttribute('href', 'mailto:teija.asiakas@example.com');
 
     // Coverage table lists the assignment under the tagged requirement
     const m23Row = page.locator('.client-requirements-table tr', { has: page.locator('.req-code', { hasText: /^M2\.3$/ }) });

@@ -88,7 +88,7 @@ Hosted at [https://qe-at-cgi-fi.github.io/experience-visualizer/](https://qe-at-
 Client profiles let you describe assignments against a specific client's requirements without cluttering your general experience tags.
 
 1. Choose a profile from "Client profile" in the header
-2. Each assignment card gets a client section; click "Edit V26" to write a client-specific description, enter an estimated effort (in htp for V26), and tick the requirements (M1–M5, M2.1–M2.9, Y1–Y3, S1–S6) the assignment demonstrates
+2. Each assignment card gets a client section; click "Edit V26" to write a client-specific description, enter an estimated effort (in htp for V26), add the client contact person's name and email, and tick the requirements (M1–M5, M2.1–M2.9, Y1–Y3, S1–S6) the assignment demonstrates
 3. The "Requirements Coverage" section lists, per requirement, the matching assignments, the calendar time they cover (overlapping assignments are counted once) and the summed estimated effort (assignments without an estimate are flagged). It respects the employer filter.
 4. If you previously tagged assignments with skill tags named by requirement code (e.g. "M2.3 Yhteiskehittäminen…"), use "Convert … code-named tags" to turn them into client requirements
 
@@ -147,7 +147,8 @@ Client data is stored per assignment and is included in exports.
       title: "Project Name",
       description: "Project description",
       clientData: {
-        V26: { description: "Client-specific description", requirements: ["M1", "M2.3"], effort: 45 }
+        V26: { description: "Client-specific description", requirements: ["M1", "M2.3"], effort: 45,
+               contactName: "Client Contact", contactEmail: "contact@example.com" }
       },
       startDate: "2023-01-01",
       endDate: "2023-06-01"
@@ -209,7 +210,7 @@ Then add corresponding CSS styles in `styles.css`:
 
 ### Adding Client Profiles
 
-Add a new entry to the `ClientProfiles` object in `models.js`. Each profile has an optional `effortUnit` (defaults to `days`) and `groups` of `requirements` (`code`, `name`, `detail`); a requirement with `children` acts as a heading whose children are the selectable items. Use `className: 'mandatory'` or `'scored'` for group colouring.
+Add a new entry to the `ClientProfiles` object in `models.js`. Each profile has an optional `effortUnit` (defaults to `days`), an optional `collectContact: true` to ask for a client contact person per assignment, and `groups` of `requirements` (`code`, `name`, `detail`); a requirement with `children` acts as a heading whose children are the selectable items. Use `className: 'mandatory'` or `'scored'` for group colouring.
 
 ### Styling Customization
 

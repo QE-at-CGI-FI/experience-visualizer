@@ -401,7 +401,9 @@ class DataStore {
         return {
             description: (entry && entry.description) || '',
             requirements: (entry && entry.requirements) || [],
-            effort: entry && typeof entry.effort === 'number' ? entry.effort : null
+            effort: entry && typeof entry.effort === 'number' ? entry.effort : null,
+            contactName: (entry && entry.contactName) || '',
+            contactEmail: (entry && entry.contactEmail) || ''
         };
     }
 
@@ -725,6 +727,7 @@ const ClientProfiles = {
     'V26': {
         label: 'V26',
         effortUnit: 'htp',
+        collectContact: true,
         groups: [
             {
                 label: 'Pakolliset vaatimukset',
@@ -822,9 +825,13 @@ const ClientProfileUtils = {
         const description = (clientEntry.description || '').trim();
         const requirements = clientEntry.requirements || [];
         const effort = this.parseEffort(clientEntry.effort);
-        if (description || requirements.length > 0 || effort !== null) {
+        const contactName = (clientEntry.contactName || '').trim();
+        const contactEmail = (clientEntry.contactEmail || '').trim();
+        if (description || requirements.length > 0 || effort !== null || contactName || contactEmail) {
             merged[profileId] = { description, requirements };
             if (effort !== null) merged[profileId].effort = effort;
+            if (contactName) merged[profileId].contactName = contactName;
+            if (contactEmail) merged[profileId].contactEmail = contactEmail;
         } else {
             delete merged[profileId];
         }

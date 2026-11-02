@@ -190,6 +190,8 @@ class CareerVisualizer {
             formData.clientData = ClientProfileUtils.mergeClientData(existing, this.clientProfile, {
                 description: document.getElementById('assign-client-description').value,
                 effort: document.getElementById('assign-client-effort').value,
+                contactName: document.getElementById('assign-client-contact-name').value,
+                contactEmail: document.getElementById('assign-client-contact-email').value,
                 requirements: Array.from(
                     document.querySelectorAll('#assign-client-requirements input[type="checkbox"]:checked')
                 ).map(cb => cb.value)
@@ -909,6 +911,13 @@ class CareerVisualizer {
                         Edit ${this.escapeHtml(profile.label)}
                     </button>
                 </div>
+                ${profile.collectContact && (clientData.contactName || clientData.contactEmail) ? `
+                    <div class="client-contact">
+                        Client contact:
+                        ${clientData.contactName ? `<strong>${this.escapeHtml(clientData.contactName)}</strong>` : ''}
+                        ${clientData.contactEmail ? `<a href="mailto:${encodeURIComponent(clientData.contactEmail).replace(/%40/g, '@')}">${this.escapeHtml(clientData.contactEmail)}</a>` : ''}
+                    </div>
+                ` : ''}
                 ${clientData.effort !== null ? `
                     <div class="client-effort">Estimated effort: <strong>${this.formatEffort(clientData.effort)}</strong></div>
                 ` : ''}
@@ -936,7 +945,7 @@ class CareerVisualizer {
         const profile = ClientProfileUtils.getProfile(this.clientProfile);
         const clientData = assignmentId
             ? dataStore.getClientData(assignmentId, this.clientProfile)
-            : { description: '', requirements: [], effort: null };
+            : { description: '', requirements: [], effort: null, contactName: '', contactEmail: '' };
         const effortUnit = ClientProfileUtils.getEffortUnit(this.clientProfile);
 
         fieldset.style.display = 'block';
@@ -945,6 +954,10 @@ class CareerVisualizer {
         document.getElementById('assign-client-description').value = clientData.description;
         document.getElementById('assign-client-effort-label').textContent = `Estimated effort (${effortUnit}):`;
         document.getElementById('assign-client-effort').value = clientData.effort !== null ? clientData.effort : '';
+        // Contact fields are kept in the form (so existing values survive a save) but only shown when the profile asks for them
+        document.getElementById('assign-client-contact').style.display = profile.collectContact ? 'block' : 'none';
+        document.getElementById('assign-client-contact-name').value = clientData.contactName;
+        document.getElementById('assign-client-contact-email').value = clientData.contactEmail;
 
         document.getElementById('assign-client-requirements').innerHTML = profile.groups.map(group => `
             <div class="client-requirement-group ${group.className}">
