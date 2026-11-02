@@ -170,7 +170,10 @@ class DataStore {
         if (employmentId !== null) {
             assignments = assignments.filter(assignment => assignment.employmentId === employmentId);
         }
-        return assignments.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
+        // Ongoing assignments first, then by start date (newest first)
+        return assignments.sort((a, b) =>
+            DateUtils.isOngoing(b.endDate) - DateUtils.isOngoing(a.endDate) ||
+            new Date(b.startDate) - new Date(a.startDate));
     }
 
     getAssignment(id) {
@@ -511,6 +514,14 @@ const DateUtils = {
             year: 'numeric', 
             month: 'short' 
         });
+    },
+
+    isOngoing(endDate) {
+        if (!endDate) return true;
+        // Compare YYYY-MM against the current month
+        const now = new Date();
+        const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        return endDate.slice(0, 7) >= currentMonth;
     },
 
     formatDateRange(startDate, endDate) {
