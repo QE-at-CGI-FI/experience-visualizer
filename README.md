@@ -83,6 +83,17 @@ Hosted at [https://qe-at-cgi-fi.github.io/experience-visualizer/](https://qe-at-
 3. Enter tag name, select category, and add optional description
 4. Save to create the experience tag
 
+### Client Profiles (e.g. V26)
+
+Client profiles let you describe assignments against a specific client's requirements without cluttering your general experience tags.
+
+1. Choose a profile from "Client profile" in the header
+2. Each assignment card gets a client section; click "Edit V26" to write a client-specific description and tick the requirements (M1–M5, M2.1–M2.9, Y1–Y3, S1–S6) the assignment demonstrates
+3. The "Requirements Coverage" section lists, per requirement, the matching assignments and the calendar time they cover (overlapping assignments are counted once). It respects the employer filter.
+4. If you previously tagged assignments with skill tags named by requirement code (e.g. "M2.3 Yhteiskehittäminen…"), use "Convert … code-named tags" to turn them into client requirements
+
+Client data is stored per assignment and is included in exports.
+
 ### Data Management
 
 #### Exporting Data
@@ -135,6 +146,9 @@ Hosted at [https://qe-at-cgi-fi.github.io/experience-visualizer/](https://qe-at-
       employmentId: 1,
       title: "Project Name",
       description: "Project description",
+      clientData: {
+        V26: { description: "Client-specific description", requirements: ["M1", "M2.3"] }
+      },
       startDate: "2023-01-01",
       endDate: "2023-06-01"
     }
@@ -192,6 +206,10 @@ Then add corresponding CSS styles in `styles.css`:
   color: #your-color;
 }
 ```
+
+### Adding Client Profiles
+
+Add a new entry to the `ClientProfiles` object in `models.js`. Each profile has `groups` of `requirements` (`code`, `name`, `detail`); a requirement with `children` acts as a heading whose children are the selectable items. Use `className: 'mandatory'` or `'scored'` for group colouring.
 
 ### Styling Customization
 

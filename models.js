@@ -132,6 +132,7 @@ class DataStore {
             employmentId: assignmentData.employmentId,
             title: assignmentData.title,
             description: assignmentData.description || '',
+            clientData: assignmentData.clientData || {},
             startDate: assignmentData.startDate,
             endDate: assignmentData.endDate || null,
             createdAt: new Date().toISOString(),
@@ -385,6 +386,79 @@ class DataStore {
         return Object.values(counts);
     }
 
+    // Client profile methods
+    // Client-specific data lives on the assignment: assignment.clientData[profileId] = { description, requirements: [codes] }
+    getClientData(assignmentId, profileId) {
+        const assignment = this.getAssignment(assignmentId);
+        const entry = assignment && assignment.clientData && assignment.clientData[profileId];
+        return {
+            description: (entry && entry.description) || '',
+            requirements: (entry && entry.requirements) || []
+        };
+    }
+
+    setClientData(assignmentId, profileId, clientEntry) {
+        const assignment = this.getAssignment(assignmentId);
+        if (!assignment) return null;
+        return this.updateAssignment(assignmentId, {
+            clientData: ClientProfileUtils.mergeClientData(assignment.clientData, profileId, clientEntry)
+        });
+    }
+
+    // For each selectable requirement of a profile, collect matching assignments and the
+    // number of distinct calendar months they cover (overlapping assignments are not double counted)
+    getClientRequirementCoverage(profileId, employmentPredicate = null) {
+        const requirements = ClientProfileUtils.getSelectableRequirements(profileId);
+        return requirements.map(requirement => {
+            const items = [];
+            const months = new Set();
+
+            this.data.assignments.forEach(assignment => {
+                const entry = assignment.clientData && assignment.clientData[profileId];
+                if (!entry || !(entry.requirements || []).includes(requirement.code)) return;
+
+                const employment = this.getEmployment(assignment.employmentId);
+                if (employmentPredicate && (!employment || !employmentPredicate(employment))) return;
+
+                const endDate = assignment.endDate || (employment ? employment.endDate : null);
+                DateUtils.monthKeysBetween(assignment.startDate, endDate).forEach(key => months.add(key));
+                items.push({ assignment, employment });
+            });
+
+            items.sort((a, b) => new Date(b.assignment.startDate) - new Date(a.assignment.startDate));
+            return { requirement, items, totalMonths: months.size };
+        });
+    }
+
+    // Find skill tags named with a requirement code prefix (e.g. "M2.3 Yhteiskehittäminen")
+    findTagsMatchingClientProfile(profileId) {
+        const codes = ClientProfileUtils.getSelectableRequirements(profileId).map(req => req.code);
+        return this.data.tags
+            .map(tag => ({ tag, code: ClientProfileUtils.codeFromTagName(tag.name, codes) }))
+            .filter(match => match.code);
+    }
+
+    // Convert code-prefixed tags into client requirements on their assignments and remove the tags
+    convertTagsToClientRequirements(profileId) {
+        const matches = this.findTagsMatchingClientProfile(profileId);
+        matches.forEach(({ tag, code }) => {
+            const assignment = this.getAssignment(tag.assignmentId);
+            if (!assignment) return;
+            const current = this.getClientData(assignment.id, profileId);
+            if (!current.requirements.includes(code)) {
+                assignment.clientData = ClientProfileUtils.mergeClientData(assignment.clientData, profileId, {
+                    ...current,
+                    requirements: [...current.requirements, code]
+                });
+                assignment.updatedAt = new Date().toISOString();
+            }
+        });
+        const convertedIds = new Set(matches.map(match => match.tag.id));
+        this.data.tags = this.data.tags.filter(tag => !convertedIds.has(tag.id));
+        this.saveData();
+        return matches.length;
+    }
+
     // Export/Import methods
     exportData() {
         const exportData = {
@@ -560,6 +634,31 @@ const DateUtils = {
         }
     },
 
+    // List of 'YYYY-MM' keys from start to end (inclusive); open-ended ranges run to the current month
+    monthKeysBetween(startDate, endDate) {
+        if (!startDate) return [];
+        let [year, month] = startDate.split('-').map(Number);
+        let endYear, endMonth;
+        if (endDate) {
+            [endYear, endMonth] = endDate.split('-').map(Number);
+        } else {
+            const now = new Date();
+            endYear = now.getFullYear();
+            endMonth = now.getMonth() + 1;
+        }
+
+        const keys = [];
+        while (year < endYear || (year === endYear && month <= endMonth)) {
+            keys.push(`${year}-${String(month).padStart(2, '0')}`);
+            month++;
+            if (month > 12) {
+                month = 1;
+                year++;
+            }
+        }
+        return keys;
+    },
+
     isValidDateRange(startDate, endDate) {
         if (!startDate) return false;
         if (endDate) {
@@ -600,6 +699,103 @@ const TagCategories = {
         className: 'domain',
         color: '#7c3aed',
         backgroundColor: '#ede9fe'
+    }
+};
+
+// Client profiles: client-specific requirement sets that assignments can be tagged against.
+// Requirements with `children` are headings; only leaf requirements can be selected.
+const ClientProfiles = {
+    'V26': {
+        label: 'V26',
+        groups: [
+            {
+                label: 'Pakolliset vaatimukset',
+                className: 'mandatory',
+                requirements: [
+                    { code: 'M1', name: 'Käyttäjälähtöinen digitaalisten palvelujen kehitys', detail: '5 vuotta (kaikki) (100 htp)' },
+                    {
+                        code: 'M2', name: 'Asiakaslähtöisen kehittämisen osa-alueet', detail: 'Yhteensä väh. 200 htp jokaiselta 9 aihealueelta',
+                        children: [
+                            { code: 'M2.1', name: 'Laadullinen käyttäjätutkimus', detail: 'Laadullisten käyttäjätutkimusten suunnittelu ja toteutus eri keinoin (mm. havainnoinnit, haastattelut, luotaimet)' },
+                            { code: 'M2.2', name: 'Laadullisen ja määrällisen tiedon hyödyntäminen', detail: 'Laadullisen ja määrällisen tiedon hyödyntäminen osana kehitystyötä' },
+                            { code: 'M2.3', name: 'Yhteiskehittäminen ja työpajojen fasilitointi', detail: 'Yhteiskehittäminen, osallistaminen, työpajojen suunnittelu sekä fasilitointi' },
+                            { code: 'M2.4', name: 'Palveluiden konseptointi', detail: 'Palveluiden konseptointi' },
+                            { code: 'M2.5', name: 'Prototyyppien suunnittelu ja toteutus', detail: 'Prototyyppien suunnittelu ja toteutus' },
+                            { code: 'M2.6', name: 'Iteratiivinen ja ketterä työskentely', detail: 'Työskentely iteratiivisesti ja ketteriä toimintamalleja hyödyntämällä' },
+                            { code: 'M2.7', name: 'Käyttäjätestaukset', detail: 'Käyttäjätestausten suunnittelu, läpivienti ja analysointi' },
+                            { code: 'M2.8', name: 'Monialaisten tiimien johtaminen ja valmentaminen', detail: 'Monialaisten kehitystiimien johtaminen ja valmentaminen asiakaslähtöisin menetelmin' },
+                            { code: 'M2.9', name: 'Liiketoimintamallien ja -konseptien suunnittelu', detail: 'Liiketoimintamallien ja -konseptien suunnittelu (strateginen taso)' }
+                        ]
+                    },
+                    { code: 'M3', name: 'Asiakaslähtöisen kehittämisen koulutus ja valmennus', detail: 'Asiakaslähtöisen kehittämisen koulutus/valmennus, 20 htp' },
+                    { code: 'M4', name: 'Liiketoimintamallien konseptointi', detail: 'Liiketoimintamallien konseptointi väh. 3 asiakkaalle' },
+                    { code: 'M5', name: 'Web-saavutettavuussertifikaatti', detail: 'Web-saavutettavuussertifikaatti (kaikki)' },
+                    { code: 'Y1', name: 'Sujuva suomen ja englannin kieli', detail: 'Sujuva suomen ja englannin kieli' },
+                    { code: 'Y2', name: 'Ketterä kehitys', detail: 'Vähintään 20 htp ketterän kehityksen kokemus' },
+                    { code: 'Y3', name: 'Vaatimukset täyttyvät koko sopimuskauden', detail: 'Vaatimukset täyttyvät koko sopimuskauden ajan' }
+                ]
+            },
+            {
+                label: 'Pisteytettävät vaatimukset',
+                className: 'scored',
+                requirements: [
+                    { code: 'S1', name: 'Verolainsäädäntöä toteuttavat ICT-järjestelmät', detail: 'Verolainsäädäntöä toteuttavat ICT-järjestelmät (100 htp)' },
+                    { code: 'S2', name: 'Monikanavaisten palvelujen kehittäminen', detail: 'Monikanavaisten palvelujen kehittäminen, 2 vuotta (100 htp)' },
+                    { code: 'S3', name: 'Monitoimittajaympäristö', detail: 'Monitoimittajaympäristö, 2 vuotta (100 htp)' },
+                    { code: 'S4', name: 'Monialaisuus', detail: 'Monialaisuus väh. 3 toimeksiannossa (50 htp)' },
+                    { code: 'S5', name: 'Saavutettavuustestaus', detail: 'Saavutettavuustestaus väh. 3 asiakkaalle' },
+                    { code: 'S6', name: 'Saavutettavuusauditointi', detail: 'Saavutettavuusauditointi väh. 3 asiakkaalle' }
+                ]
+            }
+        ]
+    }
+};
+
+const ClientProfileUtils = {
+    getProfile(profileId) {
+        return ClientProfiles[profileId] || null;
+    },
+
+    // Leaf requirements in display order, each annotated with its group and optional parent heading
+    getSelectableRequirements(profileId) {
+        const profile = this.getProfile(profileId);
+        if (!profile) return [];
+        const result = [];
+        profile.groups.forEach(group => {
+            group.requirements.forEach(requirement => {
+                if (requirement.children) {
+                    requirement.children.forEach(child => result.push({ ...child, group, parent: requirement }));
+                } else {
+                    result.push({ ...requirement, group, parent: null });
+                }
+            });
+        });
+        return result;
+    },
+
+    getRequirement(profileId, code) {
+        return this.getSelectableRequirements(profileId).find(req => req.code === code) || null;
+    },
+
+    // Returns the requirement code a tag name starts with (e.g. "M2.3 Yhteiskehittäminen" -> "M2.3"), or null
+    codeFromTagName(tagName, codes) {
+        const match = /^\s*([A-Za-z]\d+(?:\.\d+)?)(?=\s|$)/.exec(tagName || '');
+        if (!match) return null;
+        const code = match[1].toUpperCase();
+        return codes.includes(code) ? code : null;
+    },
+
+    // Returns a new clientData object with the profile entry replaced; empty entries are dropped
+    mergeClientData(clientData, profileId, clientEntry) {
+        const merged = { ...(clientData || {}) };
+        const description = (clientEntry.description || '').trim();
+        const requirements = clientEntry.requirements || [];
+        if (description || requirements.length > 0) {
+            merged[profileId] = { description, requirements };
+        } else {
+            delete merged[profileId];
+        }
+        return merged;
     }
 };
 

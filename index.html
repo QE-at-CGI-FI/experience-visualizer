@@ -28,6 +28,12 @@
                         <option value="__all__">All employers</option>
                     </select>
                 </div>
+                <div class="employer-filter client-profile-filter" title="Show client-specific requirement tags and descriptions">
+                    <label for="client-profile-select">Client profile:</label>
+                    <select id="client-profile-select" aria-label="Client profile">
+                        <option value="">None</option>
+                    </select>
+                </div>
             </div>
         </header>
 
@@ -43,6 +49,14 @@
             <section class="timeline-section">
                 <h2>Career Timeline</h2>
                 <div id="timeline" class="timeline"></div>
+            </section>
+
+            <section id="client-requirements-section" class="client-requirements-section" style="display: none;">
+                <div class="section-header">
+                    <h2 id="client-requirements-title">Client Requirements</h2>
+                    <button id="convert-client-tags-btn" class="btn btn-secondary" style="display: none;"></button>
+                </div>
+                <div id="client-requirements" class="client-requirements"></div>
             </section>
 
             <section class="tags-overview">
@@ -117,6 +131,15 @@
                     <input type="month" id="assign-end-date">
                     <small>Leave empty if ongoing</small>
                 </div>
+                <fieldset id="assign-client-section" class="client-fieldset" style="display: none;">
+                    <legend id="assign-client-legend">Client profile</legend>
+                    <div class="form-group">
+                        <label for="assign-client-description" id="assign-client-description-label">Client-specific description:</label>
+                        <textarea id="assign-client-description" rows="3"></textarea>
+                        <small>Shown instead of the general description when this client profile is active</small>
+                    </div>
+                    <div id="assign-client-requirements" class="client-requirement-options"></div>
+                </fieldset>
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary close-modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Assignment</button>

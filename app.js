@@ -11,11 +11,14 @@ class CareerVisualizer {
             tag: null
         };
         this.employerFilter = '__all__';
+        this.clientProfileStorageKey = 'career_visualizer_client_profile';
+        this.clientProfile = this.loadClientProfile();
         this.init();
     }
 
     init() {
         this.bindEvents();
+        this.populateClientProfileSelect();
         this.loadPersonName();
         this.renderEmployments();
         this.renderTimeline();
@@ -30,6 +33,8 @@ class CareerVisualizer {
         document.getElementById('import-file').addEventListener('change', (e) => this.importData(e));
         document.getElementById('concise-view-btn').addEventListener('click', () => this.openConciseViewModal());
         document.getElementById('employer-filter-select').addEventListener('change', (e) => this.handleEmployerFilterChange(e));
+        document.getElementById('client-profile-select').addEventListener('change', (e) => this.handleClientProfileChange(e));
+        document.getElementById('convert-client-tags-btn').addEventListener('click', () => this.convertTagsToClientRequirements());
 
         // Person name input
         document.getElementById('person-name').addEventListener('input', (e) => this.handlePersonNameChange(e));
@@ -156,6 +161,8 @@ class CareerVisualizer {
             form.reset();
         }
 
+        this.renderAssignmentClientFields(assignmentId);
+
         modal.classList.add('active');
     }
 
@@ -174,6 +181,18 @@ class CareerVisualizer {
         if (!DateUtils.isValidDateRange(formData.startDate, formData.endDate)) {
             alert('Invalid date range. End date must be after start date.');
             return;
+        }
+
+        if (this.clientProfile) {
+            const existing = this.currentEditingIds.assignment
+                ? dataStore.getAssignment(this.currentEditingIds.assignment).clientData
+                : {};
+            formData.clientData = ClientProfileUtils.mergeClientData(existing, this.clientProfile, {
+                description: document.getElementById('assign-client-description').value,
+                requirements: Array.from(
+                    document.querySelectorAll('#assign-client-requirements input[type="checkbox"]:checked')
+                ).map(cb => cb.value)
+            });
         }
 
         if (this.currentEditingIds.assignment) {
@@ -309,6 +328,7 @@ class CareerVisualizer {
     renderEmployments() {
         const container = document.getElementById('employment-list');
         this.populateEmployerFilter();
+        this.renderClientRequirements();
         const employments = this.applyEmployerFilter(dataStore.getEmployments());
 
         if (employments.length === 0) {
@@ -636,6 +656,8 @@ class CareerVisualizer {
                         </div>
                     ` : ''}
                     
+                    ${this.renderAssignmentClientSection(assignment)}
+
                     <div class="tags-section">
                         <div class="tags-header">
                             <h5>Experience Tags (${tags.length})</h5>
@@ -832,6 +854,202 @@ class CareerVisualizer {
     applyEmployerFilter(employments) {
         if (this.employerFilter === '__all__') return employments;
         return employments.filter(employment => this.matchesEmployerFilter(employment));
+    }
+
+    // Client Profiles
+    loadClientProfile() {
+        try {
+            const stored = localStorage.getItem(this.clientProfileStorageKey) || '';
+            return ClientProfileUtils.getProfile(stored) ? stored : '';
+        } catch (error) {
+            return '';
+        }
+    }
+
+    populateClientProfileSelect() {
+        const select = document.getElementById('client-profile-select');
+        select.innerHTML = '';
+        select.add(new Option('None', ''));
+        Object.keys(ClientProfiles).forEach(id => select.add(new Option(ClientProfiles[id].label, id)));
+        select.value = this.clientProfile;
+    }
+
+    handleClientProfileChange(e) {
+        this.clientProfile = e.target.value;
+        try {
+            localStorage.setItem(this.clientProfileStorageKey, this.clientProfile);
+        } catch (error) {
+            console.error('Error saving client profile selection:', error);
+        }
+        this.renderEmployments();
+    }
+
+    renderRequirementChip(requirement, removeHandler = '') {
+        return `
+            <span class="tag client-requirement ${requirement.group.className}" title="${this.escapeHtml(requirement.detail)}">
+                <strong>${this.escapeHtml(requirement.code)}</strong> ${this.escapeHtml(requirement.name)}
+                ${removeHandler ? `<button class="tag-remove" onclick="${removeHandler}" title="Remove requirement">×</button>` : ''}
+            </span>
+        `;
+    }
+
+    renderAssignmentClientSection(assignment) {
+        if (!this.clientProfile) return '';
+        const profile = ClientProfileUtils.getProfile(this.clientProfile);
+        const clientData = dataStore.getClientData(assignment.id, this.clientProfile);
+        const requirements = ClientProfileUtils.getSelectableRequirements(this.clientProfile)
+            .filter(req => clientData.requirements.includes(req.code));
+
+        return `
+            <div class="client-section">
+                <div class="tags-header">
+                    <h5>${this.escapeHtml(profile.label)} Requirements (${requirements.length})</h5>
+                    <button class="btn btn-small btn-primary" onclick="app.openAssignmentModal(${assignment.employmentId}, ${assignment.id})">
+                        Edit ${this.escapeHtml(profile.label)}
+                    </button>
+                </div>
+                ${clientData.description ? `
+                    <div class="assignment-description client-description">${this.escapeHtml(clientData.description)}</div>
+                ` : ''}
+                <div class="tags-list">
+                    ${requirements.length === 0
+                        ? '<p class="empty-state">No client requirements tagged yet.</p>'
+                        : requirements.map(req => this.renderRequirementChip(
+                            req, `app.removeClientRequirement(${assignment.id}, '${req.code}')`
+                        )).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    renderAssignmentClientFields(assignmentId) {
+        const fieldset = document.getElementById('assign-client-section');
+        if (!this.clientProfile) {
+            fieldset.style.display = 'none';
+            return;
+        }
+
+        const profile = ClientProfileUtils.getProfile(this.clientProfile);
+        const clientData = assignmentId
+            ? dataStore.getClientData(assignmentId, this.clientProfile)
+            : { description: '', requirements: [] };
+
+        fieldset.style.display = 'block';
+        document.getElementById('assign-client-legend').textContent = `${profile.label} client profile`;
+        document.getElementById('assign-client-description-label').textContent = `${profile.label} description:`;
+        document.getElementById('assign-client-description').value = clientData.description;
+
+        document.getElementById('assign-client-requirements').innerHTML = profile.groups.map(group => `
+            <div class="client-requirement-group ${group.className}">
+                <h5>${this.escapeHtml(group.label)}</h5>
+                ${group.requirements.map(req => req.children ? `
+                    <div class="client-requirement-parent">
+                        <div class="client-requirement-heading"><strong>${this.escapeHtml(req.code)}</strong> ${this.escapeHtml(req.detail)}</div>
+                        ${req.children.map(child => this.renderRequirementCheckbox(child, clientData)).join('')}
+                    </div>
+                ` : this.renderRequirementCheckbox(req, clientData)).join('')}
+            </div>
+        `).join('');
+    }
+
+    renderRequirementCheckbox(requirement, clientData) {
+        const id = `client-req-${requirement.code.replace('.', '-')}`;
+        return `
+            <label class="client-requirement-option" for="${id}" title="${this.escapeHtml(requirement.detail)}">
+                <input type="checkbox" id="${id}" value="${requirement.code}"
+                       ${clientData.requirements.includes(requirement.code) ? 'checked' : ''}>
+                <span><strong>${this.escapeHtml(requirement.code)}</strong> ${this.escapeHtml(requirement.detail)}</span>
+            </label>
+        `;
+    }
+
+    removeClientRequirement(assignmentId, code) {
+        const clientData = dataStore.getClientData(assignmentId, this.clientProfile);
+        dataStore.setClientData(assignmentId, this.clientProfile, {
+            ...clientData,
+            requirements: clientData.requirements.filter(existing => existing !== code)
+        });
+        this.renderEmployments();
+    }
+
+    renderClientRequirements() {
+        const section = document.getElementById('client-requirements-section');
+        if (!this.clientProfile) {
+            section.style.display = 'none';
+            return;
+        }
+
+        const profile = ClientProfileUtils.getProfile(this.clientProfile);
+        section.style.display = 'block';
+        document.getElementById('client-requirements-title').textContent = `${profile.label} Requirements Coverage`;
+
+        // Offer to convert skill tags that were named with requirement codes (e.g. "M2.3 ...")
+        const convertBtn = document.getElementById('convert-client-tags-btn');
+        const matchingTags = dataStore.findTagsMatchingClientProfile(this.clientProfile);
+        convertBtn.style.display = matchingTags.length > 0 ? 'inline-block' : 'none';
+        convertBtn.textContent = `Convert ${matchingTags.length} code-named tag${matchingTags.length !== 1 ? 's' : ''} to ${profile.label} requirements`;
+
+        const coverage = dataStore.getClientRequirementCoverage(
+            this.clientProfile,
+            this.employerFilter !== '__all__' ? (employment => this.matchesEmployerFilter(employment)) : null
+        );
+
+        let currentGroup = null;
+        let currentParent = null;
+        const rows = coverage.map(({ requirement, items, totalMonths }) => {
+            let headings = '';
+            if (requirement.group !== currentGroup) {
+                currentGroup = requirement.group;
+                headings += `<tr class="client-group-row ${currentGroup.className}"><th colspan="4">${this.escapeHtml(currentGroup.label)}</th></tr>`;
+            }
+            if (requirement.parent && requirement.parent !== currentParent) {
+                headings += `
+                    <tr class="client-parent-row">
+                        <td><strong>${this.escapeHtml(requirement.parent.code)}</strong></td>
+                        <td colspan="3">${this.escapeHtml(requirement.parent.detail)}</td>
+                    </tr>
+                `;
+            }
+            currentParent = requirement.parent;
+
+            return headings + `
+                <tr class="${items.length === 0 ? 'uncovered' : ''} ${requirement.parent ? 'child-requirement' : ''}">
+                    <td class="req-code">${this.escapeHtml(requirement.code)}</td>
+                    <td>${this.escapeHtml(requirement.detail)}</td>
+                    <td class="req-duration">${items.length > 0 ? this.formatDurationFromMonths(totalMonths) : '–'}</td>
+                    <td>
+                        ${items.length === 0 ? '<span class="req-missing">No assignments</span>' : items.map(item => `
+                            <div class="req-assignment" title="${this.escapeHtml(item.employment ? item.employment.company : '')}">
+                                ${this.escapeHtml(item.assignment.title)}
+                                <span class="req-assignment-dates">${DateUtils.formatDateRange(item.assignment.startDate, item.assignment.endDate)}</span>
+                            </div>
+                        `).join('')}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        document.getElementById('client-requirements').innerHTML = `
+            <table class="client-requirements-table">
+                <thead>
+                    <tr><th>Code</th><th>Requirement</th><th>Duration</th><th>Assignments</th></tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        `;
+    }
+
+    convertTagsToClientRequirements() {
+        const profile = ClientProfileUtils.getProfile(this.clientProfile);
+        const count = dataStore.findTagsMatchingClientProfile(this.clientProfile).length;
+        if (!confirm(`Convert ${count} experience tag(s) named with ${profile.label} requirement codes into ${profile.label} requirements? The original tags will be removed.`)) {
+            return;
+        }
+        dataStore.convertTagsToClientRequirements(this.clientProfile);
+        this.renderEmployments();
+        this.renderTimeline();
+        this.renderTagsOverview();
+        this.showNotification(`${count} tag(s) converted to ${profile.label} requirements`, 'success');
     }
 
     // Export/Import functionality
@@ -1111,6 +1329,12 @@ class CareerVisualizer {
                             </div>
                             <div class="assignment-period">${dateRange}</div>
                             ${item.assignment.description ? `<div class="assignment-description">${this.escapeHtml(item.assignment.description)}</div>` : ''}
+                            ${this.clientProfile && dataStore.getClientData(item.assignment.id, this.clientProfile).description ? `
+                                <div class="assignment-description client-description">
+                                    <strong>${this.escapeHtml(ClientProfileUtils.getProfile(this.clientProfile).label)}:</strong>
+                                    ${this.escapeHtml(dataStore.getClientData(item.assignment.id, this.clientProfile).description)}
+                                </div>
+                            ` : ''}
                             <div class="matched-tags">
                                 <strong>Matched Tags:</strong>
                                 ${item.matchedTags.map(tag => {

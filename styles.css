@@ -599,6 +599,8 @@ section {
     border-radius: 12px;
     width: 90%;
     max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
@@ -1065,4 +1067,143 @@ form {
     .tag-category-filters {
         justify-content: center;
     }
+}
+/* Client Profiles */
+.client-section {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    border: 1px solid #c7d2fe;
+    border-radius: 8px;
+    background-color: #f5f7ff;
+}
+
+.client-description {
+    color: #3730a3;
+    margin-bottom: 0.75rem;
+    white-space: pre-line;
+}
+
+.tag.client-requirement.mandatory {
+    background-color: #fde2d4;
+    color: #9a3412;
+}
+
+.tag.client-requirement.scored {
+    background-color: #d6ecfa;
+    color: #075985;
+}
+
+.client-fieldset {
+    border: 1px solid #c7d2fe;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.client-fieldset legend {
+    font-weight: 600;
+    padding: 0 0.5rem;
+}
+
+.client-requirement-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.client-requirement-group h5 {
+    margin-bottom: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+.client-requirement-group.mandatory h5 {
+    background-color: #fde2d4;
+}
+
+.client-requirement-group.scored h5 {
+    background-color: #d6ecfa;
+}
+
+.client-requirement-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: normal;
+    padding: 0.2rem 0;
+    cursor: pointer;
+}
+
+.client-requirement-option input {
+    margin-top: 0.2rem;
+    width: auto;
+}
+
+.client-requirement-parent {
+    margin: 0.25rem 0;
+}
+
+.client-requirement-heading {
+    font-size: 0.8125rem;
+    padding: 0.2rem 0;
+}
+
+.client-requirement-parent .client-requirement-option {
+    padding-left: 1.5rem;
+}
+
+.client-requirements {
+    overflow-x: auto;
+}
+
+.client-requirements-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+.client-requirements-table th,
+.client-requirements-table td {
+    text-align: left;
+    vertical-align: top;
+    padding: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.client-requirements-table thead th {
+    color: #6c757d;
+    font-weight: 600;
+}
+
+.client-group-row.mandatory th {
+    background-color: #fde2d4;
+}
+
+.client-group-row.scored th {
+    background-color: #d6ecfa;
+}
+
+.client-requirements-table .child-requirement .req-code {
+    padding-left: 1.5rem;
+}
+
+.client-requirements-table .req-code,
+.client-requirements-table .req-duration {
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.client-requirements-table tr.uncovered td {
+    color: #adb5bd;
+}
+
+.req-missing {
+    font-style: italic;
+}
+
+.req-assignment-dates {
+    color: #6c757d;
+    font-size: 0.75rem;
+    margin-left: 0.25rem;
 }
