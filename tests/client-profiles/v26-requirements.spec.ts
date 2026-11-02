@@ -22,6 +22,7 @@ test.describe('Client Profiles', () => {
     // The seeded assignment stores a full date that the month input cannot show, so re-enter it
     await page.getByRole('textbox', { name: 'Start Date:' }).fill('2023-01');
     await page.getByRole('textbox', { name: 'V26 description:' }).fill('Fasilitoin yhteiskehittämisen työpajoja.');
+    await page.getByRole('spinbutton', { name: 'Estimated effort (htp):' }).fill('45');
     await page.getByRole('checkbox', { name: /M2\.3/ }).check();
     await page.getByRole('checkbox', { name: /S4/ }).check();
     await page.getByRole('button', { name: 'Save Assignment' }).click();
@@ -31,10 +32,16 @@ test.describe('Client Profiles', () => {
     await expect(clientSection).toContainText('Fasilitoin yhteiskehittämisen työpajoja.');
     await expect(clientSection).toContainText('M2.3');
     await expect(clientSection).toContainText('S4');
+    await expect(clientSection).toContainText('Estimated effort: 45 htp');
 
     // Coverage table lists the assignment under the tagged requirement
     const m23Row = page.locator('.client-requirements-table tr', { has: page.locator('.req-code', { hasText: /^M2\.3$/ }) });
     await expect(m23Row).toContainText('Web Application Development');
+    await expect(m23Row.locator('.req-effort')).toContainText('45 htp');
+
+    // Requirements on assignments without an estimate are flagged in the coverage table
+    const m1Row = page.locator('.client-requirements-table tr', { has: page.locator('.req-code', { hasText: /^M1$/ }) });
+    await expect(m1Row.locator('.req-effort')).toHaveText('–');
 
     // Removing a requirement chip updates the assignment
     await clientSection.locator('.client-requirement', { hasText: 'S4' }).getByRole('button', { name: '×' }).click();

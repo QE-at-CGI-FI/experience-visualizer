@@ -400,7 +400,8 @@ class DataStore {
         const entry = assignment && assignment.clientData && assignment.clientData[profileId];
         return {
             description: (entry && entry.description) || '',
-            requirements: (entry && entry.requirements) || []
+            requirements: (entry && entry.requirements) || [],
+            effort: entry && typeof entry.effort === 'number' ? entry.effort : null
         };
     }
 
@@ -419,6 +420,7 @@ class DataStore {
         return requirements.map(requirement => {
             const items = [];
             const months = new Set();
+            let totalEffort = 0;
 
             this.data.assignments.forEach(assignment => {
                 const entry = assignment.clientData && assignment.clientData[profileId];
@@ -429,11 +431,19 @@ class DataStore {
 
                 const endDate = assignment.endDate || (employment ? employment.endDate : null);
                 DateUtils.monthKeysBetween(assignment.startDate, endDate).forEach(key => months.add(key));
-                items.push({ assignment, employment });
+                const effort = typeof entry.effort === 'number' ? entry.effort : null;
+                if (effort !== null) totalEffort += effort;
+                items.push({ assignment, employment, effort });
             });
 
             items.sort((a, b) => new Date(b.assignment.startDate) - new Date(a.assignment.startDate));
-            return { requirement, items, totalMonths: months.size };
+            return {
+                requirement,
+                items,
+                totalMonths: months.size,
+                totalEffort,
+                missingEffortCount: items.filter(item => item.effort === null).length
+            };
         });
     }
 
@@ -714,6 +724,7 @@ const TagCategories = {
 const ClientProfiles = {
     'V26': {
         label: 'V26',
+        effortUnit: 'htp',
         groups: [
             {
                 label: 'Pakolliset vaatimukset',
@@ -792,13 +803,28 @@ const ClientProfileUtils = {
         return codes.includes(code) ? code : null;
     },
 
+    // Unit for estimated effort, e.g. 'htp' (henkilötyöpäivä)
+    getEffortUnit(profileId) {
+        const profile = this.getProfile(profileId);
+        return (profile && profile.effortUnit) || 'days';
+    },
+
+    // Parses an effort input value into a non-negative number, or null when empty/invalid
+    parseEffort(value) {
+        if (value === null || value === undefined || String(value).trim() === '') return null;
+        const effort = Number(String(value).replace(',', '.'));
+        return Number.isFinite(effort) && effort >= 0 ? effort : null;
+    },
+
     // Returns a new clientData object with the profile entry replaced; empty entries are dropped
     mergeClientData(clientData, profileId, clientEntry) {
         const merged = { ...(clientData || {}) };
         const description = (clientEntry.description || '').trim();
         const requirements = clientEntry.requirements || [];
-        if (description || requirements.length > 0) {
+        const effort = this.parseEffort(clientEntry.effort);
+        if (description || requirements.length > 0 || effort !== null) {
             merged[profileId] = { description, requirements };
+            if (effort !== null) merged[profileId].effort = effort;
         } else {
             delete merged[profileId];
         }

@@ -189,6 +189,7 @@ class CareerVisualizer {
                 : {};
             formData.clientData = ClientProfileUtils.mergeClientData(existing, this.clientProfile, {
                 description: document.getElementById('assign-client-description').value,
+                effort: document.getElementById('assign-client-effort').value,
                 requirements: Array.from(
                     document.querySelectorAll('#assign-client-requirements input[type="checkbox"]:checked')
                 ).map(cb => cb.value)
@@ -908,6 +909,9 @@ class CareerVisualizer {
                         Edit ${this.escapeHtml(profile.label)}
                     </button>
                 </div>
+                ${clientData.effort !== null ? `
+                    <div class="client-effort">Estimated effort: <strong>${this.formatEffort(clientData.effort)}</strong></div>
+                ` : ''}
                 ${clientData.description ? `
                     <div class="assignment-description client-description">${this.escapeHtml(clientData.description)}</div>
                 ` : ''}
@@ -932,12 +936,15 @@ class CareerVisualizer {
         const profile = ClientProfileUtils.getProfile(this.clientProfile);
         const clientData = assignmentId
             ? dataStore.getClientData(assignmentId, this.clientProfile)
-            : { description: '', requirements: [] };
+            : { description: '', requirements: [], effort: null };
+        const effortUnit = ClientProfileUtils.getEffortUnit(this.clientProfile);
 
         fieldset.style.display = 'block';
         document.getElementById('assign-client-legend').textContent = `${profile.label} client profile`;
         document.getElementById('assign-client-description-label').textContent = `${profile.label} description:`;
         document.getElementById('assign-client-description').value = clientData.description;
+        document.getElementById('assign-client-effort-label').textContent = `Estimated effort (${effortUnit}):`;
+        document.getElementById('assign-client-effort').value = clientData.effort !== null ? clientData.effort : '';
 
         document.getElementById('assign-client-requirements').innerHTML = profile.groups.map(group => `
             <div class="client-requirement-group ${group.className}">
@@ -996,17 +1003,17 @@ class CareerVisualizer {
 
         let currentGroup = null;
         let currentParent = null;
-        const rows = coverage.map(({ requirement, items, totalMonths }) => {
+        const rows = coverage.map(({ requirement, items, totalMonths, totalEffort, missingEffortCount }) => {
             let headings = '';
             if (requirement.group !== currentGroup) {
                 currentGroup = requirement.group;
-                headings += `<tr class="client-group-row ${currentGroup.className}"><th colspan="4">${this.escapeHtml(currentGroup.label)}</th></tr>`;
+                headings += `<tr class="client-group-row ${currentGroup.className}"><th colspan="5">${this.escapeHtml(currentGroup.label)}</th></tr>`;
             }
             if (requirement.parent && requirement.parent !== currentParent) {
                 headings += `
                     <tr class="client-parent-row">
                         <td><strong>${this.escapeHtml(requirement.parent.code)}</strong></td>
-                        <td colspan="3">${this.escapeHtml(requirement.parent.detail)}</td>
+                        <td colspan="4">${this.escapeHtml(requirement.parent.detail)}</td>
                     </tr>
                 `;
             }
@@ -1017,11 +1024,15 @@ class CareerVisualizer {
                     <td class="req-code">${this.escapeHtml(requirement.code)}</td>
                     <td>${this.escapeHtml(requirement.detail)}</td>
                     <td class="req-duration">${items.length > 0 ? this.formatDurationFromMonths(totalMonths) : '–'}</td>
+                    <td class="req-effort">
+                        ${items.length > 0 ? this.formatEffort(totalEffort) : '–'}
+                        ${missingEffortCount > 0 ? `<div class="req-effort-missing">${missingEffortCount} without estimate</div>` : ''}
+                    </td>
                     <td>
                         ${items.length === 0 ? '<span class="req-missing">No assignments</span>' : items.map(item => `
                             <div class="req-assignment" title="${this.escapeHtml(item.employment ? item.employment.company : '')}">
                                 ${this.escapeHtml(item.assignment.title)}
-                                <span class="req-assignment-dates">${DateUtils.formatDateRange(item.assignment.startDate, item.assignment.endDate)}</span>
+                                <span class="req-assignment-dates">${DateUtils.formatDateRange(item.assignment.startDate, item.assignment.endDate)}${item.effort !== null ? ` · ${this.formatEffort(item.effort)}` : ''}</span>
                             </div>
                         `).join('')}
                     </td>
@@ -1032,11 +1043,15 @@ class CareerVisualizer {
         document.getElementById('client-requirements').innerHTML = `
             <table class="client-requirements-table">
                 <thead>
-                    <tr><th>Code</th><th>Requirement</th><th>Duration</th><th>Assignments</th></tr>
+                    <tr><th>Code</th><th>Requirement</th><th>Duration</th><th>Est. effort</th><th>Assignments</th></tr>
                 </thead>
                 <tbody>${rows}</tbody>
             </table>
         `;
+    }
+
+    formatEffort(effort) {
+        return `${effort.toLocaleString('fi-FI', { maximumFractionDigits: 1 })} ${ClientProfileUtils.getEffortUnit(this.clientProfile)}`;
     }
 
     convertTagsToClientRequirements() {
