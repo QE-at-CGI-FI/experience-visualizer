@@ -171,10 +171,17 @@ class DataStore {
         if (employmentId !== null) {
             assignments = assignments.filter(assignment => assignment.employmentId === employmentId);
         }
-        // Ongoing assignments first, then by start date (newest first)
-        return assignments.sort((a, b) =>
-            DateUtils.isOngoing(b.endDate) - DateUtils.isOngoing(a.endDate) ||
-            new Date(b.startDate) - new Date(a.startDate));
+        // Ongoing assignments first (newest start first), then ended ones by end date (latest first)
+        return assignments.sort((a, b) => {
+            const aOngoing = DateUtils.isOngoing(a.endDate);
+            const bOngoing = DateUtils.isOngoing(b.endDate);
+            if (aOngoing !== bOngoing) return bOngoing - aOngoing;
+            if (!aOngoing) {
+                const byEnd = b.endDate.slice(0, 7).localeCompare(a.endDate.slice(0, 7));
+                if (byEnd !== 0) return byEnd;
+            }
+            return b.startDate.localeCompare(a.startDate);
+        });
     }
 
     getAssignment(id) {
